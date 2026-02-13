@@ -5,7 +5,8 @@ from .base_agent import BaseAgent
 
 class ExtractorAgent(BaseAgent):
     def __init__(self):
-        name="ExtractorAgent"
+        super().__init__(
+        name="ExtractorAgent",
         instructions=("""You are a resume extraction expert.
 Extract structured information from resumes and return ONLY valid JSON.
 
@@ -50,7 +51,7 @@ Required JSON format:
 }
 
 Return ONLY the JSON object, no explanations or markdown."""
-        )
+        ))
 async def run(self, messages:list) -> Dict[str,Any]:
     """
         Process resume and extract structured information.
