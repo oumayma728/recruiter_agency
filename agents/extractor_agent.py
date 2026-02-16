@@ -96,8 +96,7 @@ Return ONLY the JSON object, no explanations or markdown."""
             return {
                 "raw_text": raw_text,
                 "structured_data": structured_data,
-                "extraction_status": "completed"
-    }   
+                "extraction_status": "completed"}   
         except Exception as e:
             return {
         "error": str(e),
