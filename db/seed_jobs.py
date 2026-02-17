@@ -40,7 +40,7 @@ def seed_jobs():
             "company": "DataCo",
             "location": "New York, NY",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$100,000 - $140,000",
             "description": "Build and deploy machine learning models for predictive analytics.",
             "requirements": [
@@ -57,7 +57,7 @@ def seed_jobs():
             "company": "WebTech",
             "location": "Remote",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$90,000 - $130,000",
             "description": "Create responsive web applications using modern frontend technologies.",
             "requirements": [
@@ -74,7 +74,7 @@ def seed_jobs():
             "company": "BizGroup",
             "location": "San Francisco, CA",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$80,000 - $110,000",
             "description": "Manage multiple projects and coordinate with cross-functional teams.",
             "requirements": [
@@ -90,7 +90,7 @@ def seed_jobs():
             "company": "DesignCo",
             "location": "Austin, TX",
             "type": "Part-time",
-            "experience_level": "Entry-level",
+            "experience_level": "Junior",
             "salary_range": "$40,000 - $60,000",
             "description": "Design marketing materials and digital content for clients.",
             "requirements": [
@@ -106,7 +106,7 @@ def seed_jobs():
             "company": "MarketMasters",
             "location": "Chicago, IL",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$70,000 - $90,000",
             "description": "Develop and implement marketing campaigns for various products.",
             "requirements": [
@@ -126,7 +126,7 @@ def seed_jobs():
             "company": "SupportHub",
             "location": "Remote",
             "type": "Full-time",
-            "experience_level": "Entry-level",
+            "experience_level": "Junior",
             "salary_range": "$35,000 - $50,000",
             "description": "Assist customers with inquiries and resolve technical issues.",
             "requirements": [
@@ -141,7 +141,7 @@ def seed_jobs():
             "company": "SecureIT",
             "location": "Washington, DC",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$95,000 - $130,000",
             "description": "Monitor and respond to security incidents and protect company data.",
             "requirements": [
@@ -156,7 +156,7 @@ def seed_jobs():
             "company": "PeopleFirst",
             "location": "Boston, MA",
             "type": "Full-time",
-            "experience_level": "Entry-level",
+            "experience_level": "Junior",
             "salary_range": "$45,000 - $60,000",
             "description": "Support HR functions including recruitment, onboarding, and employee relations.",
             "requirements": [
@@ -172,7 +172,7 @@ def seed_jobs():
             "company": "BuildWorks",
             "location": "Houston, TX",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$85,000 - $120,000",
             "description": "Design and test mechanical components for manufacturing.",
             "requirements": [
@@ -188,7 +188,7 @@ def seed_jobs():
             "company": "CoffeeHouse",
             "location": "Portland, OR",
             "type": "Part-time",
-            "experience_level": "Entry-level",
+            "experience_level": "Junior",
             "salary_range": "$15 - $18 per hour",
             "description": "Prepare coffee and serve customers in a friendly environment.",
             "requirements": [
@@ -203,7 +203,7 @@ def seed_jobs():
             "company": "DesignLabs",
             "location": "Remote",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$85,000 - $110,000",
             "description": "Conduct user research to improve product designs and user experiences.",
             "requirements": [
@@ -219,7 +219,7 @@ def seed_jobs():
             "company": "BrightSpark",
             "location": "Denver, CO",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$50,000 - $75,000",
             "description": "Install and maintain electrical systems in residential and commercial buildings.",
             "requirements": [
@@ -250,7 +250,7 @@ def seed_jobs():
             "company": "CreateSpace",
             "location": "San Francisco, CA",
             "type": "Full-time",
-            "experience_level": "Mid-level",
+            "experience_level": "Mid",
             "salary_range": "$100,000 - $130,000",
             "description": "Design and prototype new product features based on user needs.",
             "requirements": [
