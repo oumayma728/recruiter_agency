@@ -1,71 +1,125 @@
 from .base_agent import BaseAgent
+from db.database import JobDatabase
+from typing import Dict, Any, List
 import json
+import sqlite3
+
 class MatchAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             name="MatchAgent",
-            instructions="""Match candidate profiles with job positions.
-            Consider: skills match, experience level, location preferences.
-            Provide detailed reasoning and compatibility scores.
-            Return matches in JSON format with title, match_score, and location fields.""",
+            instructions=(
+                "Match candidate profiles with job positions. "
+                "Consider: skills match, experience level, location preferences. "
+                "Provide detailed reasoning and compatibility scores. "
+                "Return matches in JSON format with title, match_score, and location fields."
+            ),
         )
-    async def run(self,messages:list) -> dict:
+        self.db = JobDatabase()
+
+    async def run(self, messages: list) -> dict:
+        """Match candidate with available positions"""
         try:
-            last_message = messages[-1]["content"]
-            # Ensure dict
-            if isinstance(last_message, str):
-                data = json.loads(last_message)
-            else:
-                data = last_message
+            content = messages[-1].get("content", "{}")
+            data = json.loads(content) if isinstance(content, str) else content
+        except json.JSONDecodeError as e:
+            print(f"Error parsing analysis results: {e}")
+            return {"matched_jobs": [], "match_timestamp": "2024-03-14", "number_of_matches": 0}
 
-            candidate_profile = data.get("candidate_profile")
-            job_position = data.get("job_position")
+        skills_analysis = data.get("skills_analysis", {})
+        if not skills_analysis:
+            print("No skills analysis found in the input data.")
+            return {"matched_jobs": [], "match_timestamp": "2024-03-14", "number_of_matches": 0}
 
-            if not candidate_profile or not job_position:
-                return {"error": "Missing candidate_profile or job_position", "match_status": "failed"}
+        technical_skills = skills_analysis.get("technical_skills", [])
+        tools = skills_analysis.get("tools", [])
+        databases = skills_analysis.get("databases", [])
+        ai_ml_skills = skills_analysis.get("ai_ml_skills", [])
 
-            match_prompt = f"""Compare this candidate against this job.
+        skills = list(set(technical_skills + tools + databases + ai_ml_skills))
+        experience_level = skills_analysis.get("experience_level", "Junior")
 
-                Candidate Profile:
-                {json.dumps(candidate_profile, indent=2)}
-                Job Position:
-                {json.dumps(job_position, indent=2)}
-                Return ONLY valid JSON (no other text):
-                {{
-                "match_score": 0-100,
-                "skills_match": {{
-                    "matched": ["skill1", "skill2"],
-                    "missing": ["skill3"]
-                }},
-                "experience_match": true/false,
-                "recommendation": "YES/NO/MAYBE",
-                "reasoning": "brief explanation",
-                "strengths": ["point1", "point2"],
-                "concerns": ["point1", "point2"]
-                }}
-                Be objective, concise, and professional. Do not invent skills or experience.
-                """
-            # Here you would call your LLM with the match_prompt and the candidate/job data
-            match_response = self._query_ollama(match_prompt)
-            # Parse the response and return structured data
-            parsed_response=self._parse_json_safely(match_response)
-            if "error" in parsed_response:
-                return {
-                    "error": f"Failed to parse AI response: {parsed_response['error']}",
-                    "raw_ai_response": match_response,
-                    "match_status": "failed"
-                }
-            #validate response
-            if not self._validate_match_response(parsed_response):
-                return {
-                    "error": "Parsed match response is invalid or incomplete",
-                    "ai_response": match_response,
-                    "match_status": "failed"
-                }
-            return {
-                "match_analysis": parsed_response,
-                "match_status": "completed"
-            }
+        if not isinstance(skills, list):
+            skills = []
+        if not skills:
+            print("No valid skills found, defaulting to empty list.")
+
+        print(f"==>>> Skills: {skills}, Experience Level: {experience_level}")
+
+        matching_jobs = self.search_jobs(skills, experience_level)
+
+        scored_jobs = []
+        candidate_skills = set(skills)
+
+        for job in matching_jobs:
+            required_skills = set(job.get("requirements", []))
+            overlap = len(required_skills.intersection(candidate_skills))
+            total_required = len(required_skills)
+
+            match_score = int((overlap / total_required) * 100) if total_required > 0 else 0
+
+            if match_score >= 30:
+                scored_jobs.append({
+                    "title": f"{job['title']} at {job['company']}",
+                    "match_score": f"{match_score}%",
+                    "location": job.get("location"),
+                    "salary_range": job.get("salary_range"),
+                    "requirements": job.get("requirements", []),
+                })
+
+        scored_jobs.sort(key=lambda x: int(x["match_score"].rstrip("%")), reverse=True)
+
+        return {
+            "matched_jobs": scored_jobs[:3],
+            "match_timestamp": "2024-03-14",
+            "number_of_matches": len(scored_jobs),
+        }
+
+    def search_jobs(self, skills: List[str], experience_level: str) -> List[Dict[str, Any]]:
+        """Search jobs by skills + experience."""
+
+        # Map text levels to numbers (recommended)
+        level_map = {"Intern": 0, "Junior": 1, "Mid": 2, "Senior": 3}
+        cand_level = level_map.get(experience_level, 1)
+
+        # Your DB must store experience_level in a compatible way.
+        # If it's stored as text, consider storing a numeric column instead.
+        # Here we assume it is stored as text and we filter in Python after fetch.
+        base_query = "SELECT id, title, company, location, salary_range, requirements, experience_level FROM jobs"
+
+        where_clauses = []
+        params = []
+
+        for skill in skills:
+            where_clauses.append("requirements LIKE ?")
+            params.append(f"%{skill}%")
+
+        query = base_query
+        if where_clauses:
+            query += " WHERE (" + " OR ".join(where_clauses) + ")"
+
+        try:
+            with sqlite3.connect(self.db.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+
+            jobs = []
+            for row in rows:
+                job_level = level_map.get(row[6], 3)
+                if job_level <= cand_level:
+                    jobs.append({
+                        "id": row[0],
+                        "title": row[1],
+                        "company": row[2],
+                        "location": row[3],
+                        "salary_range": row[4],
+                        "requirements": json.loads(row[5]) if row[5] else [],
+                        "experience_level": row[6],
+                    })
+
+            return jobs
+
         except Exception as e:
-            return {"error": str(e), "match_status": "failed"}
-                            
+            print(f"Error searching for jobs: {e}")
+            return []
