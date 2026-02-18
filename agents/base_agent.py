@@ -25,6 +25,7 @@ class BaseAgent:
         try:
             response= self.ollama_client.chat.completions.create(
             model="llama3.2:latest",
+
             #role is either system, user, or assistant. System is for instructions, user is for questions, and assistant is for the ai's responses.
             messages=[
                 {"role":"system","content":self.instructions},
