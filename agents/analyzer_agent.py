@@ -4,6 +4,7 @@ from .base_agent import BaseAgent
 
 class AnalyzerAgent(BaseAgent):
     def __init__(self):
+        #super init for 
         super().__init__(
             name="Analyzer",
             instructions=("""You are an expert HR analyst specializing in technical recruitment.
