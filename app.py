@@ -54,7 +54,7 @@ def main():
                 st.error(f"Error processing resume: {results['error']}")
             else:
                 st.success("Resume processed successfully! Here are the results:")
-                tab1, tab2, tab3 = st.tabs(["Extracted Data", "Analysis Results", "Matched Jobs"])
+                tab1, tab2, tab3,tab4 = st.tabs(["Analysis", " Matched jobs", "Screening Results", "Extracted Resume JSON"])
 
                 with tab1:
                     st.subheader("Candidate Analysis - Extracted Data")
@@ -126,8 +126,22 @@ def main():
                             st.divider()
                     else:
                         st.write("No matches found.")
-
                 with tab3:
+                    st.subheader("Screening Results")
+                    screening = results.get("screening_results") or {}       # ✅
+                    screened_jobs = screening.get("screened_jobs") or []     # ✅
+                    st.metric("Screening Status", screening.get("screening_status", "N/A"))
+                    for job in screened_jobs:
+                        decision = job.get("decision", "unknown")
+                        color = "🟢" if decision == "pass" else "🔴"
+                        st.write(f"{color} **{job.get('title')}** — Score: {job.get('screening_score')}%")
+                        st.write(f"**Decision:** {decision.upper()}")
+                        st.write(f"**Reason:** {job.get('reason', 'N/A')}")
+                        st.write(f"**Strengths:** {', '.join(job.get('strengths','N/A') or [])}")
+                        st.write(f"**Weaknesses:** {', '.join(job.get('weaknesses','N/A') or [])}")
+                        st.write(f"**Red Flags:** {', '.join(job.get('red_flags','N/A') or [])}")
+                        st.divider()
+                with tab4:
                     st.subheader("Extracted Resume Data")
                     st.json(results.get("extracted_data", {}))
 

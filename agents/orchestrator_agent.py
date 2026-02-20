@@ -4,6 +4,7 @@ from .base_agent import BaseAgent
 from .extractor_agent import ExtractorAgent
 from .analyzer_agent import AnalyzerAgent
 from .matcher_agent import MatchAgent
+from .screener_agent import ScreenerAgent       
 
 class OrchestratorAgent(BaseAgent):
     def __init__(self):
@@ -20,7 +21,7 @@ class OrchestratorAgent(BaseAgent):
         self.extractor_agent = ExtractorAgent()
         self.analyzer_agent = AnalyzerAgent()
         self.match_agent = MatchAgent()
-
+        self.screener_agent = ScreenerAgent()
     async def run(self, messages: list) -> Dict[str, Any]:
         """Process a single message through the agent"""
         prompt = messages[-1]["content"]
@@ -34,13 +35,13 @@ class OrchestratorAgent(BaseAgent):
         workflow_context = {
             "resume_data": resume_input,
             "status": "initiated"
+
         }
 
         try:
             # extraction phase
             extracted_data = await self.extractor_agent.run([{"role": "user", "content": json.dumps(resume_input)}])
             workflow_context["extracted_data"] = extracted_data
-            workflow_context["current_stage"] = "analysis"
 
             if extracted_data.get("extraction_status") != "completed":
                 print(f"   ⚠️ Extraction failed: {extracted_data.get('error', 'Unknown error')}")
@@ -53,7 +54,7 @@ class OrchestratorAgent(BaseAgent):
             # analysis phase - ✅ fixed: json.dumps(extracted_data) instead of raw dict
             analysis_results = await self.analyzer_agent.run([{"role": "user", "content": json.dumps(extracted_data)}])
             workflow_context["analysis_results"] = analysis_results
-            workflow_context["current_stage"] = "matching"
+            workflow_context["current_stage"] = "analysis"
 
             if analysis_results.get("analysis_status") != "completed":
                 print(f"   ⚠️ Analysis failed: {analysis_results.get('error', 'Unknown error')}")
@@ -64,12 +65,13 @@ class OrchestratorAgent(BaseAgent):
                 }
 
             # matching phase - ✅ fixed: key is "skills_analysis" to match what MatchAgent expects
+            workflow_context["current_stage"] = "matching"
             payload = {
                 "skills_analysis": analysis_results.get("skills_analysis") or {},
+                "job_list": job_list or [],
             }
             match_results = await self.match_agent.run([{"role": "user", "content": json.dumps(payload)}])
             workflow_context["match_results"] = match_results
-            workflow_context["current_stage"] = "completed"
 
             if not match_results.get("matched_jobs"):
                 print(f"   ⚠️ No matches found")
@@ -79,9 +81,17 @@ class OrchestratorAgent(BaseAgent):
                     "current_stage": "matching",
                     "match_results": match_results
                 }
+        #screening phase
+            workflow_context["current_stage"] = "screening"
+            screening_payload = {
+                "skills_analysis": analysis_results.get("skills_analysis") or {},
+                "matched_jobs": match_results.get("matched_jobs") or []
+                }
+            screening_results = await self.screener_agent.run([{"role": "user", "content": json.dumps(screening_payload)}])
 
+            workflow_context["screening_results"] = screening_results
+            workflow_context["status"] = "completed"
             return workflow_context
-
         except Exception as e:
             print(f"Error in workflow: {str(e)}")
             return {
