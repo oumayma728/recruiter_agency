@@ -246,6 +246,72 @@ def seed_jobs():
             "benefits": ["Health insurance", "401(k) matching", "Remote work"],
         },
         {
+            "title": "Junior Backend Developer",
+            "company": "DataWave",
+            "location": "Berlin, Germany",
+            "type": "Full-time",
+            "experience_level": "Junior",
+            "salary_range": "€38,000 - €48,000",
+            "description": "Work on backend APIs and databases to support scalable web applications.",
+            "requirements": [
+                "Node.js",
+                "Express",
+                "SQL",
+                "Basic REST API knowledge",
+                "0-1 year experience"
+            ],
+            "benefits": ["Flexible hours", "Paid training", "Hybrid work"]
+        },
+        {
+            "title": "Junior Frontend Developer",
+            "company": "PixelStudio",
+            "location": "Paris, France",
+            "type": "Full-time",
+            "experience_level": "Junior",
+            "salary_range": "€35,000 - €45,000",
+            "description": "Build responsive user interfaces and collaborate with designers to improve UX.",
+            "requirements": [
+                "HTML",
+                "CSS",
+                "JavaScript",
+                "React or Vue.js",
+                "Portfolio of projects"
+            ],
+            "benefits": ["Meal vouchers", "Transport allowance", "Remote days"]
+            },
+        {
+        "title": "Junior Software Engineer (AI Focus)",
+        "company": "NextGen AI",
+        "location": "Tunisia, Bizerte",
+        "type": "Full-time",
+        "experience_level": "Junior",
+        "salary_range": "£32,000 - £40,000",
+        "description": "Support AI-powered applications and integrate ML models into production systems.",
+        "requirements": [
+            "Python",
+            "Basic Machine Learning concepts",
+            "APIs",
+            "Interest in AI systems"
+        ],
+        "benefits": ["Learning budget", "Mentorship", "Health insurance"]
+        },
+            {
+            "title": "Junior Web Developer",
+            "company": "StartupLab",
+            "location": "Casablanca, Morocco",
+            "type": "Full-time",
+            "experience_level": "Junior",
+            "salary_range": "8,000 MAD - 11,000 MAD",
+            "description": "Create and maintain websites for startup clients.",
+            "requirements": [
+                "PHP or JavaScript",
+                "Laravel or basic backend framework",
+                "HTML/CSS",
+                "Motivation to learn"
+            ],
+            "benefits": ["Startup environment", "Skill development", "Team events"]
+            },
+        {
             "title": "Product Designer",
             "company": "CreateSpace",
             "location": "San Francisco, CA",
