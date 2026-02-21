@@ -5,7 +5,7 @@ from .extractor_agent import ExtractorAgent
 from .analyzer_agent import AnalyzerAgent
 from .matcher_agent import MatchAgent
 from .screener_agent import ScreenerAgent       
-
+from .recommender_agent import RecommenderAgent
 class OrchestratorAgent(BaseAgent):
     def __init__(self):
         super().__init__(
@@ -22,6 +22,7 @@ class OrchestratorAgent(BaseAgent):
         self.analyzer_agent = AnalyzerAgent()
         self.match_agent = MatchAgent()
         self.screener_agent = ScreenerAgent()
+        self.recommender_agent = RecommenderAgent()
     async def run(self, messages: list) -> Dict[str, Any]:
         """Process a single message through the agent"""
         prompt = messages[-1]["content"]
@@ -91,6 +92,16 @@ class OrchestratorAgent(BaseAgent):
 
             workflow_context["screening_results"] = screening_results
             workflow_context["status"] = "completed"
+        #recommendation phase
+            workflow_context["current_stage"] = "recommendation"
+            recommendation_payload = {
+                "extraction_results": extracted_data,
+                "analysis_results": analysis_results,
+                "match_results": match_results,
+                "screening_results": screening_results
+                }
+            recommendation_results = await self.recommender_agent.run([{"role": "user", "content": json.dumps(recommendation_payload)}])
+            workflow_context["recommendation"] = recommendation_results
             return workflow_context
         except Exception as e:
             print(f"Error in workflow: {str(e)}")
