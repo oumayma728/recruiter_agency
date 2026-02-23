@@ -54,7 +54,7 @@ def main():
                 st.error(f"Error processing resume: {results['error']}")
             else:
                 st.success("Resume processed successfully! Here are the results:")
-                tab1, tab2, tab3,tab4 = st.tabs(["Analysis", " Matched jobs", "Screening Results", "Extracted Resume JSON"])
+                tab1, tab2, tab3,tab4 = st.tabs(["Analysis", " Matched jobs", "Screening Results & Recommendations", "Extracted Resume JSON"])
 
                 with tab1:
                     st.subheader("Candidate Analysis - Extracted Data")
@@ -127,7 +127,8 @@ def main():
                     else:
                         st.write("No matches found.")
                 with tab3:
-                    st.subheader("Screening Results")
+                    st.subheader("Screening Results & Recommendations")
+
                     screening = results.get("screening_results") or {}       # ✅
                     screened_jobs = screening.get("screened_jobs") or []     # ✅
                     st.metric("Screening Status", screening.get("screening_status", "N/A"))
@@ -141,6 +142,20 @@ def main():
                         st.write(f"**Weaknesses:** {', '.join(job.get('weaknesses','N/A') or [])}")
                         st.write(f"**Red Flags:** {', '.join(job.get('red_flags','N/A') or [])}")
                         st.divider()
+                    recommendation = results.get("recommendation") or {}   # ✅
+                    st.write("### Final Recommendation")
+                    st.write(f"**Overall Assessment:** {recommendation.get('overall_assessment', 'N/A')}")
+                    st.write(f"**Hiring Recommendation:** {recommendation.get('hiring_recommendation', 'N/A')}")
+                    st.write(f"**Confidence Level:** {recommendation.get('confidence_level', 'N/A')}")
+                    top_match = recommendation.get("top_match_analysis", {})
+                    st.write("**Top Match Analysis:**")
+                    st.write(f"- Best Job: {top_match.get('best_job', 'N/A')}")
+                    st.write(f"- Match Reasoning: {top_match.get('match_reasoning', 'N/A')}")
+                    st.write(f"- Salary Recommendation: {top_match.get('salary_recommendation', 'N/A')}")
+                    st.write(f"**Strengths:** {', '.join(recommendation.get('strengths','N/A') or [])}")
+                    st.write(f"**Concerns:** {', '.join(recommendation.get('concerns','N/A') or [])}")
+                    st.write(f"**Next Steps:** {', '.join(recommendation.get('next_steps','N/A') or [])}")
+                    st.write(f"**Interview Questions:** {', '.join(recommendation.get('interview_questions','N/A') or [])}")
                 with tab4:
                     st.subheader("Extracted Resume Data")
                     st.json(results.get("extracted_data", {}))
