@@ -156,9 +156,15 @@ def main():
                     st.write(f"**Concerns:** {', '.join(recommendation.get('concerns','N/A') or [])}")
                     st.write(f"**Next Steps:** {', '.join(recommendation.get('next_steps','N/A') or [])}")
                     st.write(f"**Interview Questions:** {', '.join(recommendation.get('interview_questions','N/A') or [])}")
+                    st.divider()
+                    st.subheader("Enhanced Profile Recommendations")
+                    enhancement = results.get("enhancement_results", {})
+                    st.json(enhancement)
+
                 with tab4:
                     st.subheader("Extracted Resume Data")
                     st.json(results.get("extracted_data", {}))
+                    
 
 if __name__ == "__main__":
     main()

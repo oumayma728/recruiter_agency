@@ -6,6 +6,7 @@ from .analyzer_agent import AnalyzerAgent
 from .matcher_agent import MatchAgent
 from .screener_agent import ScreenerAgent       
 from .recommender_agent import RecommenderAgent
+from .profile_enhacer_agent import ProfileEnhancerAgent
 class OrchestratorAgent(BaseAgent):
     def __init__(self):
         super().__init__(
@@ -23,6 +24,7 @@ class OrchestratorAgent(BaseAgent):
         self.match_agent = MatchAgent()
         self.screener_agent = ScreenerAgent()
         self.recommender_agent = RecommenderAgent()
+        self.profile_enhancer_agent = ProfileEnhancerAgent()
     async def run(self, messages: list) -> Dict[str, Any]:
         """Process a single message through the agent"""
         prompt = messages[-1]["content"]
@@ -101,7 +103,20 @@ class OrchestratorAgent(BaseAgent):
                 "screening_results": screening_results
                 }
             recommendation_results = await self.recommender_agent.run([{"role": "user", "content": json.dumps(recommendation_payload)}])
-            workflow_context["recommendation"] = recommendation_results
+            workflow_context["recommendation"] = recommendation_results.get("final_recommendation", {})
+            workflow_context["recommendation_status"] = recommendation_results.get("recommendation_status", "unknown")
+            #enhancement phase
+            workflow_context["current_stage"] = "profile_enhancement"
+            enhancement_payload = {
+                "extraction_results": extracted_data,
+                "analysis_results": analysis_results,
+                "match_results": match_results,
+                "screening_results": screening_results,
+                "recommendation": workflow_context["recommendation"],
+                "recommendation_status": workflow_context["recommendation_status"]
+            }
+            enhancement_results = await self.profile_enhancer_agent.run([{"role": "user", "content": json.dumps(enhancement_payload)}])
+            workflow_context["enhancement_results"] = enhancement_results
             return workflow_context
         except Exception as e:
             print(f"Error in workflow: {str(e)}")
