@@ -6,10 +6,10 @@ The system processes resumes and job descriptions, analyzes qualifications, matc
 The architecture is scalable, maintainable, and designed with separation of concerns in mind.
 ### 🔄 Workflow
 Typical execution flow:
-1.Extractor Agent → Extract structured data
-2.Analyzer Agent → Analyze qualifications
-3.Profile Enhancer Agent → Improve profile 
-4.Matcher Agent → Compute compatibility
-5.Screener Agent → Filter candidates
-6.Recommender Agent → Recommend best matches
-7.Orchestrator Agent → Controls the entire process
+- **Extractor Agent** → Extract structured data 
+- **Analyzer Agent** → Analyze qualifications
+- **Profile Enhancer Agent** → Improve profile 
+- **Matcher Agent** → Compute compatibility
+- **Screener Agent** → Filter candidates
+- **Recommender Agent** → Recommend best matches
+- **Orchestrator Agent** → Controls the entire process
