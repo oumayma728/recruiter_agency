@@ -49,7 +49,7 @@ def main():
 
             with st.spinner("Analyzing resume and finding matches..."):
                 results = asyncio.run(process_resume(file_path, job_list))
-
+                st.write("Recommendation type:", type(results.get("recommendation")))
             if results.get("error"):
                 st.error(f"Error processing resume: {results['error']}")
             else:
@@ -129,8 +129,8 @@ def main():
                 with tab3:
                     st.subheader("Screening Results & Recommendations")
 
-                    screening = results.get("screening_results") or {}       # ✅
-                    screened_jobs = screening.get("screened_jobs") or []     # ✅
+                    screening = results.get("screening_results") or {}       
+                    screened_jobs = screening.get("screened_jobs") or []     
                     st.metric("Screening Status", screening.get("screening_status", "N/A"))
                     for job in screened_jobs:
                         decision = job.get("decision", "unknown")
@@ -142,7 +142,7 @@ def main():
                         st.write(f"**Weaknesses:** {', '.join(job.get('weaknesses','N/A') or [])}")
                         st.write(f"**Red Flags:** {', '.join(job.get('red_flags','N/A') or [])}")
                         st.divider()
-                    recommendation = results.get("recommendation") or {}   # ✅
+                    recommendation = results.get("recommendation") or {}  
                     st.write("### Final Recommendation")
                     st.write(f"**Overall Assessment:** {recommendation.get('overall_assessment', 'N/A')}")
                     st.write(f"**Hiring Recommendation:** {recommendation.get('hiring_recommendation', 'N/A')}")
@@ -152,14 +152,13 @@ def main():
                     st.write(f"- Best Job: {top_match.get('best_job', 'N/A')}")
                     st.write(f"- Match Reasoning: {top_match.get('match_reasoning', 'N/A')}")
                     st.write(f"- Salary Recommendation: {top_match.get('salary_recommendation', 'N/A')}")
-                    st.write(f"**Strengths:** {', '.join(recommendation.get('strengths','N/A') or [])}")
-                    st.write(f"**Concerns:** {', '.join(recommendation.get('concerns','N/A') or [])}")
                     st.write(f"**Next Steps:** {', '.join(recommendation.get('next_steps','N/A') or [])}")
-                    st.write(f"**Interview Questions:** {', '.join(recommendation.get('interview_questions','N/A') or [])}")
                     st.divider()
                     st.subheader("Enhanced Profile Recommendations")
                     enhancement = results.get("enhancement_results", {})
-                    st.json(enhancement)
+                    recommendations = enhancement.get("recommendations", [])
+                    for rec in recommendations:
+                        st.write(f"- {rec}")
 
                 with tab4:
                     st.subheader("Extracted Resume Data")
