@@ -103,23 +103,13 @@ class OrchestratorAgent(BaseAgent):
                 "screening_results": screening_results
                 }
             recommendation_results = await self.recommender_agent.run([{"role": "user", "content": json.dumps(recommendation_payload)}])
-            print(f"   🔍 Recommendation results type: {type(recommendation_results)}")
-            print(f"   🔍 Recommendation results keys: {list(recommendation_results.keys())}")
-            print(f"   🔍 Has 'recommendation' key: {'recommendation' in recommendation_results}")
-            print(f"   🔍 Recommendation value type: {type(recommendation_results.get('recommendation'))}")
-            print(f"   🔍 Recommendation keys: {list(recommendation_results.get('recommendation', {}).keys())}")
 
             workflow_context["recommendation"] = recommendation_results.get("recommendation", {})     
             workflow_context["recommendation_status"] = recommendation_results.get("recommendation_status", "unknown")
             #enhancement phase
             workflow_context["current_stage"] = "profile_enhancement"
             enhancement_payload = {
-                "extraction_results": extracted_data,
-                "analysis_results": analysis_results,
-                "match_results": match_results,
-                "screening_results": screening_results,
-                "recommendation": workflow_context["recommendation"],
-                "recommendation_status": workflow_context["recommendation_status"]
+                "extraction_results": extracted_data.get("extraction_results", {})
             }
             enhancement_results = await self.profile_enhancer_agent.run([{"role": "user", "content": json.dumps(enhancement_payload)}])
             workflow_context["enhancement_results"] = enhancement_results

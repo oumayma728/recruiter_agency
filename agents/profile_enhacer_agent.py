@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from .base_agent import BaseAgent
+import json
 class ProfileEnhancerAgent(BaseAgent):
     def __init__(self):
         super().__init__(
@@ -16,12 +17,18 @@ class ProfileEnhancerAgent(BaseAgent):
         print(f"💡 {self.name}: Enhancing candidate profile...")
         try:
             last_message = messages[-1]["content"]
-            data = last_message if isinstance(last_message, dict) else {}
-            extraction = data.get("extraction_results", {})
+            data = json.loads(last_message) if isinstance(last_message, str) else last_message            
+            extraction_wrapper = data.get("extraction_results", {})
+
+            # If already flat, use it directly
+            if "skills" in extraction_wrapper:
+                extraction = extraction_wrapper
+            else:
+                extraction = extraction_wrapper.get("extraction_results", {})
+
             skills = extraction.get("skills", [])
             experience = extraction.get("experience", [])
             achievements = extraction.get("achievements", [])
-
             enhancement_prompt = f"""
                 Based on the candidate data below, generate professional recommendations 
                 to improve their profile.
@@ -41,6 +48,8 @@ class ProfileEnhancerAgent(BaseAgent):
                 """.strip()
             print(f"   🧠 Generating enhanced profile with prompt:\n{enhancement_prompt}\n")
             response = self._query_ollama(enhancement_prompt)
+            print(f"RAW RESPONSE: {repr(response)}")
+
             response_data = self._parse_json_safely(response)
             if "error" in response_data:
                 print(f"   ⚠️ Profile enhancement failed: {response_data['error']}")
@@ -49,7 +58,7 @@ class ProfileEnhancerAgent(BaseAgent):
                     "enhancement_status": "failed"
                 }
             return{
-                "enhanced_profile": response_data.get("enhanced_profile", ""),
+                "recommendations": response_data.get("recommendations", []),
                 "enhancement_status": "success"
             }
         except Exception as e:
