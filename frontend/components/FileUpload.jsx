@@ -1,92 +1,86 @@
 import { useState } from 'react';
 import { Upload, FileText, X } from 'lucide-react';
 
-function FileUpload({ onFileSelect, selectedFile, onRemove }) {
-  const [dragActive, setDragActive] = useState(false);
+function FileUpload({ onFileSelect, onAnalyze, loading }) {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setSelectedFile(file);
+      setError(null);
+      onFileSelect(file);
+    } else {
+      setError('Please select a PDF file');
+      setSelectedFile(null);
+      onFileSelect(null);
     }
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === 'application/pdf') {
-        onFileSelect(file);
-      } else {
-        alert('Please upload a PDF file');
-      }
-    }
-  };
-
-  const handleChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      onFileSelect(e.target.files[0]);
-    }
+  const handleRemove = () => {
+    setSelectedFile(null);
+    setError(null);
+    onFileSelect(null);
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      {!selectedFile ? (
-        <div
-          className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 text-center transition 
-          ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <Upload size={48} className="text-gray-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-800">Upload Resume</h3>
-          <p className="text-gray-500 text-sm mb-4">
-            Drag and drop your PDF resume here, or click to browse
-          </p>
-
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleChange}
-            className="hidden"
-            id="file-input"
-          />
-
+    <div className="mb-8 max-w-md mx-auto">
+      <div className="bg-white shadow-lg rounded-xl p-6 transition-transform hover:scale-[1.01]">
+        
+        {!selectedFile ? (
           <label
             htmlFor="file-input"
-            className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all text-center"
           >
-            Choose File
+            <Upload className="text-primary" size={48} />
+            <h3 className="text-xl font-semibold text-gray-800">Upload Resume</h3>
+            <p className="text-gray-600">Drag & drop or select a PDF file</p>
+            <input
+              id="file-input"
+              type="file"
+              accept=".pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <span className="mt-2 inline-block bg-primary text-black px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-all">
+              Choose File
+            </span>
           </label>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow-sm">
-          <div className="flex items-center gap-3">
-            <FileText size={32} className="text-blue-600" />
-            <div>
-              <p className="font-medium text-gray-800">{selectedFile.name}</p>
-              <p className="text-sm text-gray-500">
-                {(selectedFile.size / 1024).toFixed(2)} KB
-              </p>
+        ) : (
+          <>
+            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl mb-4 shadow-sm">
+              <FileText className="text-primary flex-shrink-0" size={40} />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-800 truncate">{selectedFile.name}</p>
+                <p className="text-sm text-gray-600">
+                  {(selectedFile.size / 1024).toFixed(2)} KB
+                </p>
+              </div>
+              <button
+                onClick={handleRemove}
+                className="flex items-center justify-center p-2 bg-red-500 text-black rounded-lg hover:bg-red-600 transition-colors flex-shrink-0"
+              >
+                <X size={20} />
+              </button>
             </div>
-          </div>
 
-          <button
-            onClick={onRemove}
-            className="p-2 rounded-full hover:bg-red-100 text-red-600 transition"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      )}
+            <button
+              onClick={onAnalyze}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-black font-semibold py-3 rounded-lg hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Analyzing...' : 'Analyze Resume'}
+            </button>
+          </>
+        )}
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center text-sm">
+            {error}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
