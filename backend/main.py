@@ -9,13 +9,12 @@ app = FastAPI(
     description="API for processing resumes and matching them with job postings using AI.",
     version="1.0.0",
 )
+origins = os.getenv("ALLOWED_ORIGINS").split(",")
 # Allow CORS for frontend development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ],
+    allow_origins=origins,
+
 )
 # Directory to save uploaded resumes
 UPLOAD_DIR = "uploads"
