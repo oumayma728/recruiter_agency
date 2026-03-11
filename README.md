@@ -54,6 +54,40 @@ The system now includes a **Keejob Scraper**:
 
 ## 🚀 Getting Started
 
-1. Clone the repo:
-```bash
-git clone https://github.com/<your-username>/ai-recruiter-agency.git
+1. **Clone the repository** to your local machine.
+
+2. **Backend setup (Python)**
+
+   - Navigate to backend folder:
+     ```bash
+     cd backend
+     ```
+   - Create a virtual environment:
+
+     **Windows**
+     ```bash
+     python -m venv venv
+     venv\Scripts\activate
+     ```
+
+     **Linux / Mac**
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+
+   - Install dependencies:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+3. **Run the backend API**
+   ```bash
+   uvicorn main:app --reload
+   ```
+4. **Frontend setup (React + Tailwind)**
+   ```bash
+   cd ../frontend
+   npm install
+   npm start
+    ```
