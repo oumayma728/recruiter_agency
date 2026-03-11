@@ -13,6 +13,7 @@ Extract structured information from resumes and return ONLY valid JSON.
 Required JSON format:
 {
 "personal_info": {
+    "job_title": "",
     "name": "",
     "email": "",
     "phone": "",

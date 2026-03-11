@@ -1,8 +1,6 @@
 from .base_agent import BaseAgent
-from db.database import JobDatabase
 from typing import Dict, Any, List
 import json
-import sqlite3
 
 class MatchAgent(BaseAgent):
     def __init__(self):
@@ -15,118 +13,128 @@ class MatchAgent(BaseAgent):
                 "Return matches in JSON format with title, match_score, and location fields."
             ),
         )
-        #Initialize the job database connection
-        self.db = JobDatabase()
+        # ❌ DON'T initialize scraper here - jobs are passed from main.py
+        # Remove this line:
+        # self.db = KeeJobScraper.KeeJobScraper()
 
     async def run(self, messages: list) -> dict:
         """Match candidate with available positions"""
+        
+        print(f"💼 {self.name}: Starting job matching...")
+        
         try:
-            #Assuming the last message contains the candidate's skills analysis in JSON format
+            # Parse input
             content = messages[-1].get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
         except json.JSONDecodeError as e:
-            print(f"Error parsing analysis results: {e}")
-            return {"matched_jobs": [], "match_timestamp": "2024-03-14", "number_of_matches": 0}
-        #Extract skills and experience level from the analysis results
+            print(f"   ❌ Error parsing input: {e}")
+            return {
+                "matched_jobs": [],
+                "match_timestamp": "2024-03-14",
+                "number_of_matches": 0
+            }
+
+        # Extract skills analysis and job list
         skills_analysis = data.get("skills_analysis", {})
+        job_list = data.get("job_list", [])  # ← Jobs from main.py!
+        
         if not skills_analysis:
-            print("No skills analysis found in the input data.")
-            return {"matched_jobs": [], "match_timestamp": "2024-03-14", "number_of_matches": 0}
-        #Combine all relevant skills into a single list and ensure it's valid
+            print("   ⚠️ No skills analysis found")
+            return {
+                "matched_jobs": [],
+                "match_timestamp": "2024-03-14",
+                "number_of_matches": 0
+            }
+        
+        if not job_list:
+            print("   ⚠️ No jobs provided")
+            return {
+                "matched_jobs": [],
+                "match_timestamp": "2024-03-14",
+                "number_of_matches": 0
+            }
+
+        # Extract candidate skills
         technical_skills = skills_analysis.get("technical_skills", [])
         tools = skills_analysis.get("tools", [])
         databases = skills_analysis.get("databases", [])
         ai_ml_skills = skills_analysis.get("ai_ml_skills", [])
 
-        skills = list(set(technical_skills + tools + databases + ai_ml_skills))
-        #Extract experience level, defaulting to "Junior" if not provided or invalid
+        # Combine all skills
+        all_skills = technical_skills + tools + databases + ai_ml_skills
+        candidate_skills = list(set(all_skills))  # Remove duplicates
+        
         experience_level = skills_analysis.get("experience_level", "Junior")
-    
-        if not isinstance(skills, list):
-            skills = []
-        if not skills:
-            print("No valid skills found, defaulting to empty list.")
 
-        print(f"==>>> Skills: {skills}, Experience Level: {experience_level}")
-        #Search for matching jobs based on the extracted skills and experience level
-        matching_jobs = self.search_jobs(skills, experience_level)
+        print(f"   📊 Candidate has {len(candidate_skills)} skills")
+        print(f"   📊 Matching against {len(job_list)} jobs")
+        print(f"   📊 Experience level: {experience_level}")
 
-        scored_jobs = []
-        candidate_skills = set(skills)
+        # Match candidate against jobs
+        scored_jobs = self._score_jobs(candidate_skills, experience_level, job_list)
 
-        for job in matching_jobs:
-            required_skills = set(job.get("requirements", []))
-            #overlap is the number of skills that match between the candidate and the job requirements, and total_required is the total number of required skills for the job. The match score is calculated as the percentage of required skills that the candidate possesses, and only jobs with a match score of 30% or higher are included in the final results. The matched jobs are then sorted by their match score in descending order, and the top 3 matches are returned along with a timestamp and the total number of matches found.
-            overlap = len(required_skills.intersection(candidate_skills))
-
-            total_required = len(required_skills)
-
-            match_score = int((overlap / total_required) * 100) if total_required > 0 else 0
-
-            if match_score >= 30:
-                scored_jobs.append({
-                    "title": f"{job['title']} at {job['company']}",
-                    "match_score": f"{match_score}%",
-                    "location": job.get("location"),
-                    "salary_range": job.get("salary_range"),
-                    "requirements": job.get("requirements", []),
-                })
-
+        # Sort by score and take top 3
         scored_jobs.sort(key=lambda x: int(x["match_score"].rstrip("%")), reverse=True)
+        top_matches = scored_jobs[:3]
+
+        print(f"   ✅ Found {len(scored_jobs)} matches (showing top {len(top_matches)})")
 
         return {
-            "matched_jobs": scored_jobs[:3],
+            "matched_jobs": top_matches,
             "match_timestamp": "2024-03-14",
             "number_of_matches": len(scored_jobs),
         }
 
-    def search_jobs(self, skills: List[str], experience_level: str) -> List[Dict[str, Any]]:
-        """Search jobs by skills + experience."""
-
-        # Map text levels to numbers (recommended)
-        level_map = {"Intern": 0, "Junior": 1, "Mid": 2, "Senior": 3}
-        # Get the candidate's experience level as a number, defaulting to 1 (Junior) if not found
-        cand_level = level_map.get(experience_level, 1)
-
-        # Your DB must store experience_level in a compatible way.
-        # If it's stored as text, consider storing a numeric column instead.
-        # Here we assume it is stored as text and we filter in Python after fetch.
-        base_query = "SELECT id, title, company, location, salary_range, requirements, experience_level FROM jobs"
+    def _score_jobs(self, candidate_skills: List[str], experience_level: str, job_list: List[Dict]) -> List[Dict]:
+        """
+        Score jobs based on skill match and experience level
         
-        where_clauses = []
-        params = []
-
-        for skill in skills:
-            where_clauses.append("requirements LIKE ?")
-            params.append(f"%{skill}%")
-
-        query = base_query
-        if where_clauses:
-            query += " WHERE (" + " OR ".join(where_clauses) + ")"
-
-        try:
-            #connect to the SQLite database, execute the query with the provided parameters, and fetch all matching rows. The results are then processed to filter out jobs that exceed the candidate's experience level, and a list of matching job dictionaries is returned.
-            with sqlite3.connect(self.db.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute(query, params)
-                rows = cursor.fetchall()
-
-            jobs = []
-            for row in rows:
-                job_level = level_map.get(row[6], 3)
-                if job_level <= cand_level:
-                    jobs.append({
-                        "id": row[0],
-                        "title": row[1],
-                        "company": row[2],
-                        "location": row[3],
-                        "salary_range": row[4],
-                        "requirements": json.loads(row[5]) if row[5] else [],
-                        "experience_level": row[6],
+        Args:
+            candidate_skills: List of candidate's skills
+            experience_level: Candidate's experience level (Junior/Mid/Senior)
+            job_list: List of available jobs
+        
+        Returns:
+            List of scored jobs
+        """
+        
+        scored_jobs = []
+        candidate_skills_lower = set([s.lower() for s in candidate_skills])
+        
+        for job in job_list:
+            # Calculate skill match score
+            job_title = job.get('title', '').lower()
+            job_description = job.get('description', '').lower()
+            job_requirements = job.get('requirements', [])
+            
+            # Combine all job text for matching
+            job_text = f"{job_title} {job_description}"
+            
+            # Count skill matches
+            skill_matches = sum(1 for skill in candidate_skills_lower if skill in job_text)
+            
+            # Also check requirements if available
+            if job_requirements:
+                req_lower = set([r.lower() for r in job_requirements])
+                req_matches = len(candidate_skills_lower.intersection(req_lower))
+                skill_matches += req_matches
+            
+            # Calculate match score
+            if skill_matches > 0:
+                # Each skill match = 15%, max 100%
+                match_score = min(skill_matches * 15, 100)
+                
+                # Only include if score >= 30%
+                if match_score >= 30:
+                    scored_jobs.append({
+                        "title": job.get('title', 'Unknown Position'),
+                        "company": job.get('company', 'Unknown Company'),
+                        "match_score": f"{int(match_score)}%",
+                        "location": job.get('location', 'Tunisia'),
+                        "salary_range": job.get('salary_range', 'Not specified'),
+                        "requirements": job.get('requirements', []),
+                        "url": job.get('url', ''),
+                        "source": job.get('source', 'Keejob')
                     })
-
-            return jobs
-
-        except Exception as e:
-            print(f"Error searching for jobs: {e}")
-            return []
+        
+        return scored_jobs

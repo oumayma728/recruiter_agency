@@ -86,7 +86,6 @@ Return ONLY this JSON (no markdown, no other text):
                     "recommendation_status": "completed"
                 }
             
-            print(f"   🔍 First 200 chars: {str(response)[:200]}")
             
             response_data = self._parse_json_safely(response)
             
@@ -122,7 +121,6 @@ Return ONLY this JSON (no markdown, no other text):
             print(f"   ✅ Recommendation generated successfully")
             
             return {
-                "recommendation": response_data,
                 "recommendation_status": "completed"
             }
             
