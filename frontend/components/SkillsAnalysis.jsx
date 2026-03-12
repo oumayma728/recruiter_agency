@@ -1,3 +1,5 @@
+import { Briefcase, Award, TrendingUp, Wrench, Database } from 'lucide-react';
+
 function SkillsAnalysis({ data }) {
   const skillsAnalysis = data?.analysis_results?.skills_analysis || {};
 
@@ -6,123 +8,111 @@ function SkillsAnalysis({ data }) {
       title: "Technical Skills",
       icon: <Award size={18} />,
       items: skillsAnalysis.technical_skills,
-      color: "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5"
+      color: "text-indigo-600",
+      borderColor: "border-indigo-200",
+      bgColor: "bg-indigo-50",
+      iconBg: "bg-indigo-100",
+      skillBg: "bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
     },
     {
       title: "Tools",
       icon: <Wrench size={18} />,
       items: skillsAnalysis.tools,
-      color: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5"
+      color: "text-emerald-600",
+      borderColor: "border-emerald-200",
+      bgColor: "bg-emerald-50",
+      iconBg: "bg-emerald-100",
+      skillBg: "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
     },
     {
       title: "Databases",
       icon: <Database size={18} />,
       items: skillsAnalysis.databases,
-      color: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5"
+      color: "text-amber-600",
+      borderColor: "border-amber-200",
+      bgColor: "bg-amber-50",
+      iconBg: "bg-amber-100",
+      skillBg: "bg-white border border-amber-200 text-amber-700 hover:bg-amber-50"
     }
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 space-y-8 hover:shadow-2xl transition-shadow duration-300">
+    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 space-y-8 hover:shadow-2xl transition-shadow duration-300 max-w-6xl mx-auto">
 
-      {/* Header with enhanced styling */}
+      {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
         <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
           <Briefcase className="text-white" size={24} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
-            Skills Analysis
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Technical expertise breakdown
-          </p>
+          <h2 className="text-2xl font-bold text-gray-800">Skills Analysis</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Technical expertise breakdown</p>
         </div>
       </div>
 
-      {/* Stats Cards with enhanced design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {/* Experience Card - Enhanced */}
-        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100/50 p-6 border border-indigo-100 hover:border-indigo-200 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-indigo-200/20 rounded-bl-full" />
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Experience</span>
-              <Briefcase size={16} className="text-indigo-400" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-800">
-                {skillsAnalysis.years_of_experience || 0}
-              </span>
-              <span className="text-sm font-medium text-gray-500">years</span>
-            </div>
-            <div className="mt-3 h-1.5 w-full bg-indigo-200/50 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min((skillsAnalysis.years_of_experience || 0) * 10, 100)}%` }}
-              />
-            </div>
+      {/* Stats Cards — always 2 columns */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Experience</span>
+            <Briefcase size={16} className="text-indigo-400" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-gray-800">
+              {skillsAnalysis.years_of_experience || 0}
+            </span>
+            <span className="text-sm font-medium text-gray-500">years</span>
+          </div>
+          <div className="mt-5 h-3 w-full bg-indigo-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full"
+              style={{ width: `${Math.min((skillsAnalysis.years_of_experience || 0) * 10, 100)}%` }}
+            />
           </div>
         </div>
 
-        {/* Level Card - Enhanced */}
-        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-6 border border-emerald-100 hover:border-emerald-200 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/20 rounded-bl-full" />
-          <div className="relative">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Level</span>
-              <TrendingUp size={16} className="text-emerald-400" />
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-gray-800">
-                {skillsAnalysis.experience_level || "N/A"}
-              </span>
-              {skillsAnalysis.experience_level && (
-                <span className="px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
-                  {skillsAnalysis.experience_level === "Senior" ? "Senior Level" : 
-                   skillsAnalysis.experience_level === "Mid" ? "Mid Level" : "Junior Level"}
-                </span>
-              )}
-            </div>
+        <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Level</span>
+            <TrendingUp size={16} className="text-emerald-400" />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl font-bold text-gray-800">
+              {skillsAnalysis.experience_level || "N/A"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Skill Sections with enhanced design */}
-      <div className="space-y-6">
+      {/* Skills Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {sections.map(
           (section, idx) =>
             section.items?.length > 0 && (
-              <div key={idx} className="space-y-3">
-                {/* Section Title with icon and count */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-lg ${
-                      section.color.split(' ')[0]
-                    }`}>
-                      {section.icon}
-                    </div>
-                    <h3 className="font-semibold text-gray-700">
-                      {section.title}
-                    </h3>
+              <div
+                key={idx}
+                className={`p-6 rounded-xl border ${section.borderColor} ${section.bgColor} shadow-sm`}
+                style={{ minWidth: 0, overflow: 'hidden' }}
+              >
+                {/* Section Header */}
+                <div className="flex items-center gap-2 mb-5">
+                  <div className={`p-2 rounded-lg ${section.iconBg} ${section.color}`}>
+                    {section.icon}
                   </div>
-                  <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                    {section.items.length}
-                  </span>
+                  <h3 className="font-semibold text-gray-800 text-base">
+                    {section.title}
+                  </h3>
                 </div>
 
-                {/* Skills with enhanced badges */}
-                <div className="flex flex-wrap gap-2">
-                  {section.items.map((item, i) => (
+                {/* Pills — inline styles guarantee wrap works regardless of Tailwind purge */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%', minWidth: 0 }}>
+                  {section.items.map((skill, i) => (
                     <span
                       key={i}
-                      className={`
-                        px-4 py-2 rounded-lg text-sm font-medium
-                        border transition-all duration-200 cursor-default
-                        ${section.color}
-                      `}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors cursor-pointer ${section.skillBg}`}
+                      style={{ whiteSpace: 'nowrap' }}
                     >
-                      {item}
+                      {skill}
                     </span>
                   ))}
                 </div>
@@ -130,6 +120,7 @@ function SkillsAnalysis({ data }) {
             )
         )}
       </div>
+
     </div>
   );
 }

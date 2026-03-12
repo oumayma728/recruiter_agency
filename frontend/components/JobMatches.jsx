@@ -22,25 +22,25 @@ if (matches.length === 0) {
     <div className="bg-white/80 backdrop-blur rounded-2xl shadow-lg p-10 border border-gray-200">
     
       {/* Header */}
-    <div className="mb-10 flex items-center justify-between">
+      <div className="mb-10 flex items-center justify-between">
         <div>
-        <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-800">
+          <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-800">
             <Briefcase className="text-indigo-600" size={28} />
             Top Job Matches
-        </h2>
+          </h2>
 
-        <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 mt-2">
             Found <span className="font-semibold">{matches.length}</span> matching positions
-        </p>
+          </p>
         </div>
 
         <div className="text-sm text-gray-400">
-            AI Powered Matching
+          AI Powered Matching
         </div>
-    </div>
+      </div>
 
       {/* Job Cards */}
-      <div className="grid gap-6">
+      <div className="space-y-8">
         {matches.map((job, index) => (
           <div
             key={index}
@@ -56,7 +56,7 @@ if (matches.length === 0) {
                 
                 {/* Rank */}
                 <div className="text-black flex items-center justify-center font-bold shadow">
-                  #{index + 1}
+                #{index + 1}
                 </div>
 
                 {/* Title */}
@@ -71,12 +71,6 @@ if (matches.length === 0) {
                 </div>
               </div>
 
-              {/* Match score */}
-            <div className="flex flex-col items-end gap-1">
-                <span className="px-3 py-1 bg-green-100 text-green-700 font-semibold text-sm rounded-full">
-                    {job.match_score}
-                </span>
-            </div>
             </div>
 
             {/* Match score progress */}
@@ -105,19 +99,8 @@ if (matches.length === 0) {
             {/* Skills */}
             {job.requirements?.length > 0 && (
             <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                Required Skills
-                </p>
 
                 <div className="flex flex-wrap gap-2">
-                {job.requirements.slice(0, 5).map((req, i) => (
-                    <span
-                    key={i}
-                    className="px-3 py-1 text-xs font-medium rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100"
-                    >
-                    {req}
-                    </span>
-                ))}
 
                 {job.requirements.length > 5 && (
                     <span className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
@@ -134,7 +117,7 @@ if (matches.length === 0) {
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-black hover:scale-105 transition-transform"
+                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-green-800 text-black hover:scale-105 transition-transform"
             >
                 View Job on {job.source}
                 <ExternalLink size={16} />
