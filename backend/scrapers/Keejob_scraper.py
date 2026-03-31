@@ -199,110 +199,66 @@ class KeeJobScraper:
          
         return jobs 
  
-    def _extract_jobs_from_page(self) -> List[Dict]: 
-        """Extract jobs from current page with updated selectors""" 
-        jobs = [] 
-         
-        # Get page source and parse 
-        page_source = self.driver.page_source 
-        soup = BeautifulSoup(page_source, "html.parser") 
-         
-        # Try multiple possible selectors for job cards (updated based on actual site) 
-        job_card_selectors = [ 
-            "article", 
-            "article.bg-white", 
-            "div.offre-item", 
-        ] 
-         
-        job_cards = [] 
-        for selector in job_card_selectors: 
-            job_cards = soup.select(selector) 
-            if job_cards: 
-                print(f"   Found {len(job_cards)} cards with selector: '{selector}'") 
-                break 
-         
-        if not job_cards: 
-            # Save HTML for debugging 
-            with open(f"debug_page_{int(time.time())}.html", "w", encoding="utf-8") as f: 
-                f.write(page_source) 
-            return [] 
-         
-        for card in job_cards: 
-            try: 
-                # Extract title - try multiple selectors 
-                title = self._extract_text(card, [ 
-                    "h2 a", "h2", "h3", "h4", 
-                    ".job-title", ".poste", ".titre", 
-                    "a[href*='/emploi/']", "a[href*='/offre/']" 
-                ]) 
-                 
-                if not title or title == "Unknown Position": 
-                    continue 
-                 
-                # Extract company 
-                company = self._extract_text(card, [ 
-                    "p a[href*='/companies/']", ".company", ".entreprise", ".employer", 
-                    ".recruteur", ".societe", "span:-soup-contains('Chez')" 
-                ]) 
-                 
-                # Extract location 
-                location = ""
-                loc_icon = card.select_one(".fa-map-marker-alt")
-                if loc_icon and loc_icon.parent:
-                    location = loc_icon.parent.get_text(strip=True)
+    def _extract_jobs_from_page(self) -> List[Dict]:
+        """Extract jobs from current page with improved text extraction"""
+        jobs = []
+    
+        # Get page source and parse
+        page_source = self.driver.page_source
+        soup = BeautifulSoup(page_source, "html.parser")
+        
+        # Find job cards
+        job_cards = soup.select("article")
+        
+        for card in job_cards:
+            try:
+            # Extract title
+                title_elem = card.find("h2") or card.find("h3") or card.find("h4")
+                title = title_elem.text.strip() if title_elem else "Unknown Position"
                 
-                if not location:
-                    location = self._extract_text(card, [ 
-                        ".location", ".lieu", ".city", ".ville", 
-                        "span:-soup-contains('Tunis')", "span:-soup-contains('Sfax')" 
-                    ]) 
-                 
-                # Extract description 
-                description = self._extract_text(card, [ 
-                    "div.mb-3 p.text-sm", 
-                    ".description", ".job-description", ".desc", 
-                    ".resume", "p.text-sm"
-                ]) 
-                 
-                # Extract date 
-                date = ""
-                date_icon = card.select_one(".fa-clock")
-                if date_icon and date_icon.parent:
-                    date = date_icon.parent.get_text(strip=True)
+                # Extract company
+                company_elem = card.find(class_=lambda x: x and ('company' in x or 'entreprise' in x))
+                company = company_elem.text.strip() if company_elem else "Company Not Listed"
                 
-                if not date:
-                    date = self._extract_text(card, [ 
-                        ".date", "time", ".publié", ".published" 
-                    ]) 
-                 
-                # Extract link 
-                link_elem = card.find("a", href=True) 
-                link = "" 
-                if link_elem: 
-                    link = link_elem['href'] 
-                    if not link.startswith("http"): 
-                        link = self.base_url + link 
-                 
-                job = { 
-                    "title": title, 
-                    "company": company or "Company Not Listed", 
-                    "location": location or "Tunisia", 
-                    "url": link, 
-                    "description": description[:500] if description else "", 
-                    "date_posted": date, 
-                    "requirements": self._extract_skills_from_text(f"{title} {description}"), 
-                    "salary_range": "Not specified", 
-                    "source": "Keejob" 
-                } 
-                 
-                jobs.append(job) 
-                print(f"   ✅ Found: {title[:50]}...") 
-                 
-            except Exception as e: 
-                continue 
-         
-        return jobs 
- 
+                # Extract location
+                location_elem = card.find(class_=lambda x: x and ('location' in x or 'lieu' in x))
+                location = location_elem.text.strip() if location_elem else "Tunisia"
+                
+                # Extract description - get more text
+                desc_elem = card.find(class_=lambda x: x and ('description' in x or 'desc' in x))
+                description = desc_elem.text.strip()[:500] if desc_elem else ""
+                
+            # Extract link
+                link_elem = card.find("a", href=True)
+                link = link_elem['href'] if link_elem else ""
+                if link and not link.startswith("http"):
+                    link = self.base_url + link
+                
+                # Combine ALL text from card for skill extraction
+                full_card_text = card.get_text(separator=" ", strip=True)
+                
+                # Extract skills from full text
+                skills = self._extract_skills_from_text(full_card_text)
+                
+                job = {
+                    "title": title,
+                    "company": company,
+                    "location": location,
+                    "url": link,
+                    "description": description,
+                    "requirements": skills,  # Now populated with more skills
+                    "salary_range": "Not specified",
+                    "source": "Keejob"
+                }
+                
+                jobs.append(job)
+                print(f"   ✅ Found: {title[:50]}...")
+                print(f"      Extracted skills: {skills[:5]}")
+                
+            except Exception as e:
+                continue
+    
+        return jobs
     def _extract_text(self, element, selectors, default=""): 
         """Helper to extract text using multiple selectors""" 
         for selector in selectors: 
