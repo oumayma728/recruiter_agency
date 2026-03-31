@@ -44,7 +44,6 @@ Required JSON format:
     "institution": "",
     "location": "",
     "graduation_date": "",
-    "gpa": ""
     }
 ],
     "certifications": [],
@@ -80,10 +79,23 @@ Return ONLY the JSON object, no explanations or markdown."""
                     "extraction_status": "failed"
                     }
             #build the ai prompt 
-            prompt = f"""Extract information from this resume and return ONLY valid JSON:
-            {raw_text}
-            Remember: Return ONLY the JSON object, no other text
-            """ 
+            prompt = f"""Extract information from this resume and return ONLY valid JSON.
+
+                STRICT RULES:
+                1. "title" in experience = the EXACT job title (e.g. "Stagiaire Développeuse Full-Stack", "Développeuse Mobile React Native")
+                - If the word "Stagiaire" appears → keep it in the title, it means intern
+                2. "start_date" and "end_date" = look for date patterns like "02/2025 – 06/2025" or "10/2025 – 12/2025"
+                - Dates are often listed SEPARATELY from the job title in the raw text, match them by order
+                3. "degree" in education = the EXACT degree name (e.g. "Cycle d'Ingénieur en Informatique", "Licence en génie logiciel")
+                4. "location" in personal_info = city extracted from the resume (e.g. "Bizerte")
+                5. "job_title" in personal_info = the headline under the name (e.g. "Développeuse Full-Stack | Web, Mobile & IA")
+                6. "languages" in skills = spoken languages (French, Arabic, English), NOT programming languages
+
+                Resume:
+                {raw_text}
+
+                Return ONLY the JSON object, no other text.
+                """
             #sends prompt to ollama
             ai_response=self._query_ollama(prompt)
             #parse the ai response

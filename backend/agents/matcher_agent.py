@@ -75,7 +75,7 @@ class MatchAgent(BaseAgent):
 
         # Sort by score and take top 3
         scored_jobs.sort(key=lambda x: int(x["match_score"].rstrip("%")), reverse=True)
-        top_matches = scored_jobs[:3]
+        top_matches = scored_jobs[:5]
 
         print(f"   ✅ Found {len(scored_jobs)} matches (showing top {len(top_matches)})")
 
@@ -88,53 +88,119 @@ class MatchAgent(BaseAgent):
     def _score_jobs(self, candidate_skills: List[str], experience_level: str, job_list: List[Dict]) -> List[Dict]:
         """
         Score jobs based on skill match and experience level
-        
-        Args:
-            candidate_skills: List of candidate's skills
-            experience_level: Candidate's experience level (Junior/Mid/Senior)
-            job_list: List of available jobs
-        
-        Returns:
-            List of scored jobs
         """
         
         scored_jobs = []
         candidate_skills_lower = set([s.lower() for s in candidate_skills])
         
+        # Common skill mappings for job titles
+        title_skill_mappings = {
+            # General full-stack (detect from description)
+            'full-stack': {
+                'keywords': ['react', 'angular', 'vue', 'node.js', 'python', 'java', 'php', 'c#', 'javascript'],
+                'common': ['javascript', 'html', 'css', 'git', 'rest api']
+            },
+            
+            # Specific stacks
+            'mern': ['mongodb', 'express', 'react', 'node.js', 'javascript'],
+            'mean': ['mongodb', 'express', 'angular', 'node.js', 'javascript'],
+            'lamp': ['linux', 'apache', 'mysql', 'php'],
+            'django': ['python', 'django', 'postgresql', 'html', 'css'],
+            'spring': ['java', 'spring', 'spring boot', 'mysql', 'maven'],
+            'laravel': ['php', 'laravel', 'mysql', 'javascript'],
+            'asp.net': ['c#', 'asp.net', 'mssql', 'javascript', 'html'],
+            'ai': ['python', 'tensorflow', 'pytorch', 'machine learning', 'openai'],
+            
+            # Frontend specific
+            'frontend': ['react', 'angular', 'vue', 'javascript', 'html', 'css', 'typescript'],
+            
+            # Backend specific  
+            'backend': ['python', 'java', 'node.js', 'c#', 'sql', 'rest api', 'microservices'],
+            
+            # Mobile specific
+            'mobile': ['react native', 'flutter', 'swift', 'kotlin', 'android', 'ios']
+        }
+        
         for job in job_list:
-            # Calculate skill match score
             job_title = job.get('title', '').lower()
             job_description = job.get('description', '').lower()
+            
+            # Get existing requirements or create from title
             job_requirements = job.get('requirements', [])
             
-            # Combine all job text for matching
-            job_text = f"{job_title} {job_description}"
-            
-            # Count skill matches
-            skill_matches = sum(1 for skill in candidate_skills_lower if skill in job_text)
-            
-            # Also check requirements if available
-            if job_requirements:
-                req_lower = set([r.lower() for r in job_requirements])
-                req_matches = len(candidate_skills_lower.intersection(req_lower))
-                skill_matches += req_matches
-            
-            # Calculate match score
-            if skill_matches > 0:
-                # Each skill match = 15%, max 100%
-                match_score = min(skill_matches * 15, 100)
+            # If requirements are empty or only generic, add skills based on title
+            if not job_requirements or len(job_requirements) <= 1:
+                # Check title against mappings
+                enhanced_skills = []
+                for key, skills in title_skill_mappings.items():
+                    if key in job_title:
+                        enhanced_skills.extend(skills)
                 
-                # Only include if score >= 30%
-                if match_score >= 30:
-                    scored_jobs.append({
-                        "title": job.get('title', 'Unknown Position'),
-                        "company": job.get('company', 'Unknown Company'),
-                        "match_score": f"{int(match_score)}%",
-                        "location": job.get('location', 'Tunisia'),
-                        "salary_range": job.get('salary_range', 'Not specified'),
-                        "requirements": job.get('requirements', []),
-                        "url": job.get('url', ''),
-                        "source": job.get('source', 'Keejob')
-                    })
+                if enhanced_skills:
+                    job_requirements = list(set(enhanced_skills))  # Remove duplicates
+                    print(f"   🔧 Enhanced skills for '{job.get('title')}': {job_requirements[:5]}...")
+            
+            # Convert to lowercase for matching
+            job_skills_lower = set([s.lower() for s in job_requirements])
+            
+            # Find common skills
+            common_skills = candidate_skills_lower.intersection(job_skills_lower)
+            skill_matches = len(common_skills)
+            
+            # Calculate skill score (max 100%)
+            max_skills = 10
+            skill_score = min((skill_matches / max_skills) * 100, 100)
+            
+            # Experience level matching
+            exp_score = 0
+            if experience_level == "Junior":
+                if 'junior' in job_title or 'débutant' in job_description or 'stagiaire' in job_description:
+                    exp_score = 20
+                else:
+                    exp_score = 10  # Neutral for jobs that don't specify
+            elif experience_level == "Mid":
+                if not ('junior' in job_title or 'senior' in job_title):
+                    exp_score = 20
+                else:
+                    exp_score = 5
+            else:  # Senior
+                if 'senior' in job_title or 'lead' in job_title:
+                    exp_score = 20
+                else:
+                    exp_score = 5
+            
+            # Final score (skill 80% + experience 20%)
+            final_score = (skill_score * 0.8) + exp_score
+            
+            # Debug output
+            print(f"   Job: {job.get('title', 'Unknown')[:40]}")
+            print(f"      Candidate skills: {list(candidate_skills_lower)[:5]}")
+            print(f"      Job skills: {list(job_skills_lower)[:5]}")
+            print(f"      Common skills: {list(common_skills)[:5]}")
+            print(f"      Skill matches: {skill_matches}/{max_skills}")
+            print(f"      Skill score: {skill_score:.0f}%")
+            print(f"      Experience score: {exp_score}")
+            print(f"      Final score: {final_score:.0f}%")
+            
+            # Only include if score >= 30%
+            if final_score >= 30:
+                scored_jobs.append({
+                    "title": job.get('title', 'Unknown Position'),
+                    "company": job.get('company', 'Unknown Company'),
+                    "match_score": f"{int(final_score)}%",
+                    "location": job.get('location', 'Tunisia'),
+                    "salary_range": job.get('salary_range', 'Not specified'),
+                    "requirements": job_requirements,
+                    "matched_skills": list(common_skills)[:5],
+                    "url": job.get('url', ''),
+                    "source": job.get('source', 'Keejob')
+                })
+        
+        # Sort by score
+        scored_jobs.sort(key=lambda x: int(x["match_score"].rstrip("%")), reverse=True)
+        
+        if not scored_jobs:
+            print(f"   ⚠️ No matches found. Check candidate skills and job requirements.")
+            print(f"   Candidate skills sample: {list(candidate_skills_lower)[:10]}")
         
         return scored_jobs
