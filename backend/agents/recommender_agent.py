@@ -58,6 +58,7 @@ Return ONLY this JSON (no markdown, no other text):
 {{
   "overall_assessment": "brief summary",
   "hiring_recommendation": "PROCEED or CONSIDER or PASS",
+  overall_assessment": "brief summary",
   "confidence_level": "high or medium or low",
   "top_match_analysis": {{
     "best_job": "job title",
