@@ -213,6 +213,75 @@ Return ONLY the JSON object, no explanations or markdown.""")
             filled.append(exp)
 
         return filled
+
+    def _extract_location_from_text(self, text: str) -> str:
+        """Try to recover a location from header-like lines in the raw resume text."""
+        if not text:
+            return ""
+
+        lines = [line.strip(" ,|-\t") for line in text.splitlines() if line.strip()]
+        location_labels = ("location", "lieu", "ville", "address", "adresse")
+
+        for line in lines[:20]:
+            lower = line.lower()
+            if any(label in lower for label in location_labels):
+                if ":" in line:
+                    return line.split(":", 1)[1].strip()
+                if "-" in line:
+                    return line.split("-", 1)[1].strip()
+                return line.strip()
+
+        for line in lines[:12]:
+            lower = line.lower()
+            if "@" in line or re.search(r"\b\d{8,}\b", line):
+                continue
+            if len(line) > 45:
+                continue
+            if any(token in lower for token in ["developer", "développe", "engineer", "analyst", "manager", "student"]):
+                continue
+            if "," in line or re.search(r"\b(tunis|bizerte|sfax|sousse|ariana|nabeul|monastir|tunisia|tunisie)\b", lower):
+                return line.strip()
+
+        return ""
+
+    def _backfill_profile_location(self, personal_info: dict, raw_text: str) -> dict:
+        """Backfill missing personal location from the raw resume text."""
+        if not isinstance(personal_info, dict):
+            return personal_info
+
+        if not (personal_info.get("location") or "").strip():
+            inferred_location = self._extract_location_from_text(raw_text)
+            if inferred_location:
+                personal_info["location"] = inferred_location
+
+        return personal_info
+
+    def _backfill_education_fields(self, education_list: list, raw_text: str) -> list:
+        """Fill graduation dates when the model returns year-only or blanks."""
+        if not isinstance(education_list, list):
+            return education_list
+
+        fallback_years = [match.group(0) for match in re.finditer(r"\b(?:19|20)\d{2}\b", raw_text)]
+        year_index = 0
+
+        for edu in education_list:
+            if not isinstance(edu, dict):
+                continue
+
+            graduation_date = (edu.get("graduation_date") or "").strip()
+            year_value = edu.get("year")
+
+            if not graduation_date:
+                if year_value not in (None, "", 0):
+                    edu["graduation_date"] = str(year_value)
+                elif year_index < len(fallback_years):
+                    edu["graduation_date"] = fallback_years[year_index]
+                    year_index += 1
+
+            if "year" in edu:
+                edu.pop("year", None)
+
+        return education_list
     
     def _determine_experience_level(self, years: float) -> str:
         """Détermine le niveau d'expérience (Junior/Mid/Senior)"""
@@ -272,10 +341,11 @@ Return ONLY the JSON object, no explanations or markdown.""")
 2. 🎓 **ÉDUCATION**
    - "degree": Le nom EXACT du diplôme (ex: "Cycle d'Ingénieur en Informatique")
    - "institution": Le nom de l'école
+    - "graduation_date": Date de diplomation ou fin d'études (ex: "2024" ou "06/2024")
 
 3. 👤 **INFORMATIONS PERSONNELLES**
    - "job_title": La ligne sous le nom (ex: "Développeuse Full-Stack | Web, Mobile & IA")
-   - "location": La ville extraite (ex: "Bizerte", "Tunis")
+    - "location": La ville ou le pays extrait depuis l'en-tête ou l'adresse (ex: "Bizerte", "Tunis", "Tunisia")
    - "name": Le nom complet
    - "email": Format xxx@xxx.xxx
    - "phone": Numéro de téléphone
@@ -309,6 +379,15 @@ Return ONLY the JSON object, no explanations or markdown.""")
                     "ai_response": ai_response[:500],  # Garder les 500 premiers caractères pour debug
                     "extraction_status": "failed"
                 }
+
+            structured_data["personal_info"] = self._backfill_profile_location(
+                structured_data.get("personal_info", {}),
+                raw_text
+            )
+            structured_data["education"] = self._backfill_education_fields(
+                structured_data.get("education", []),
+                raw_text
+            )
             
             # 🔧 POST-TRAITEMENT: Calculer les années d'expérience
             experience_list = structured_data.get("experience", [])
