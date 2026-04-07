@@ -109,6 +109,8 @@ class RankingAgent(BaseAgent):
             traceback.print_exc()
             return {"error": str(e), "status": "failed"}
     
+
+    #calculate score for each job based on  60% skills + 30% experience + 10% location
     def _score_jobs(self, candidate_skills: List[str], years_exp: float, 
                     level: str, job_list: List[Dict]) -> List[Dict]:
         """
@@ -160,6 +162,8 @@ class RankingAgent(BaseAgent):
         scored_jobs.sort(key=lambda x: x["score"], reverse=True)
         return scored_jobs
     
+
+    #gets skills from job title using simple rules
     def _infer_skills_from_title(self, title: str) -> List[str]:
         """Infer required skills from job title (rule-based)"""
         title_lower = title.lower()
@@ -172,14 +176,15 @@ class RankingAgent(BaseAgent):
             "devops": ["docker", "kubernetes", "aws", "linux", "ci/cd"],
             "mobile": ["react native", "flutter", "swift", "kotlin"],
             "ai": ["python", "tensorflow", "pytorch", "langchain"],
+            "cybersecurity": ["network security", "penetration testing", "linux", "python"],
+            "iot": ["embedded systems", "c/c++", "python", "mqtt", "linux"]
+
         }
         
         for key, skills in skill_maps.items():
             if key in title_lower:
                 return skills
         
-        return ["javascript", "python", "sql", "git"]  # Default
-    
     def _score_experience_match(self, candidate_level: str, job_title: str, job_desc: str) -> float:
         """Score experience level match (0-100)"""
         text = (job_title + " " + job_desc).lower()
@@ -214,11 +219,20 @@ class RankingAgent(BaseAgent):
     
     def _location_matches(self, job: Dict, candidate_profile: Dict) -> bool:
         """Check location match (simplified)"""
-        # Could be expanded with actual candidate location
-        return True  # Default to true for now
+        personal_info = candidate_profile.get("personal_info", {})
+        candidate_location = personal_info.get("location", "").strip().lower()
+
+        #extract job location
+        job_location = job.get("location", "").strip().lower()
+
+        if not candidate_location or not job_location:
+            return True  # Assume match if location is missing
+        return candidate_location == job_location
+    
+
     
     async def _analyze_top_jobs(self, candidate_profile: Dict, top_jobs: List[Dict],
-                                 candidate_skills: List[str], years_exp: float) -> List[Dict]:
+        candidate_skills: List[str], years_exp: float) -> List[Dict]:
         """
         ONE LLM call to analyze top jobs with detailed reasoning
         Replaces Screener + Recommender LLM calls
