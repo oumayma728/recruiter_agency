@@ -35,8 +35,12 @@ class JobSpyScraper:
         }
         mapped_country = country_aliases.get(normalized_country, normalized_country)
 
-        # Use selected country as fallback search location when no location was extracted from CV.
-        search_location = location.strip() if location else (None if mapped_country == "remote" else mapped_country.title())
+        # Always prioritize selected country for search location to avoid CV-location override.
+        search_location = None if mapped_country == "remote" else mapped_country.title()
+
+        # If user selected remote, let a concrete CV location help ranking when available.
+        if mapped_country == "remote" and location:
+            search_location = location.strip()
 
         indeed_supported = {"usa", "canada", "uk", "france", "germany", "india"}
         if mapped_country in indeed_supported:
@@ -120,7 +124,7 @@ class JobSpyScraper:
         return {
             "title": str(title).strip(),
             "company": str(company).strip(),
-            "location": str(location).strip() or "Tunisia",
+            "location": str(location).strip() or "Location not specified",
             "url": str(url).strip(),
             "description": str(description).strip(),
             "requirements": self._extract_skills_from_text(f"{title} {description}"),
