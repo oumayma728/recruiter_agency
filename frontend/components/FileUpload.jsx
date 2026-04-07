@@ -12,6 +12,7 @@ function FileUpload({
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
+  const [notCvError, setNotCvError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   
@@ -306,6 +307,25 @@ function FileUpload({
                 </div>
               </div>
             )}
+            {notCvError && (
+            <div className="mt-5 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl animate-in slide-in-from-top duration-200">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-amber-100 rounded-lg">
+                  <FileText size={16} className="text-amber-700" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-amber-800 font-semibold text-sm">Invalid Document</p>
+                  <p className="text-amber-700 text-sm mt-0.5">{notCvError}</p>
+                  <p className="text-amber-600 text-xs mt-2">
+                    Please upload a standard resume/CV with sections like: Experience, Education, Skills
+                  </p>
+                </div>
+                <button onClick={() => setNotCvError(null)} className="p-1 hover:bg-amber-100 rounded-lg transition-colors">
+                  <X size={14} className="text-amber-600" />
+                </button>
+              </div>
+            </div>
+)}
           </div>
 
         
