@@ -3,6 +3,7 @@ import { Briefcase, Award, TrendingUp, Wrench, Database } from 'lucide-react';
 function SkillsAnalysis({ data }) {
   const skillsAnalysis = data?.analysis_results?.skills_analysis || {};
   const jobTitle = data?.candidate?.job_title || skillsAnalysis?.job_title || "N/A";
+  const name = data?.candidate?.name || skillsAnalysis?.name || "N/A";
 
   const sections = [
     {
@@ -38,28 +39,26 @@ function SkillsAnalysis({ data }) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 space-y-8 hover:shadow-2xl transition-shadow duration-300 max-w-6xl mx-auto">
+    <div className="bg-white rounded-2xl shadow-xl p-20 border border-gray-100 space-y-8 hover:shadow-2xl transition-shadow duration-300 max-w-6xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-        <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
-          <Briefcase className="text-white" size={24} />
-        </div>
+      <div className="flex items-center gap-3 p-4 border-b border-gray-100">
+
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Skills Analysis</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Skills Analysis for {name}</h2>
           <p className="text-sm text-gray-500 mt-0.5">Technical expertise breakdown</p>
         </div>
       </div>
 
       {/* Stats Cards — always 2 columns */}
       <div className="grid grid-cols-2 gap-6">
-        <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white p-6 border border-indigo-100 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between mb-3">
+        <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-white p-2 border border-indigo-100 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Experience</span>
             <Briefcase size={16} className="text-indigo-400" />
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-gray-800">
+          <div className="p-4 flex items-baseline gap-2">
+            <span className="text-xl font-bold text-gray-800">
               {skillsAnalysis.years_of_experience || 0}
             </span>
             <span className="text-sm font-medium text-gray-500">years</span>
@@ -71,22 +70,22 @@ function SkillsAnalysis({ data }) {
             />
           </div>
         </div>
-        <div>
+        <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Job title</span>
             <Award size={16} className="text-yellow-400" />
           </div>
-          <span className="text-3xl font-bold text-gray-800">
+          <span className="text-xl font-bold text-gray-800">
             {jobTitle}
           </span>
         </div>
-        <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all">
+        <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white p-4 border border-emerald-100 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Level</span>
             <TrendingUp size={16} className="text-emerald-400" />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-3xl font-bold text-gray-800">
+            <span className="text-xl font-bold text-gray-800">
               {skillsAnalysis.experience_level || "N/A"}
             </span>
           </div>
@@ -100,7 +99,7 @@ function SkillsAnalysis({ data }) {
             section.items?.length > 0 && (
               <div
                 key={idx}
-                className={`p-6 rounded-xl border ${section.borderColor} ${section.bgColor} shadow-sm`}
+                className={`p-4 rounded-xl border ${section.borderColor} ${section.bgColor} shadow-sm`}
                 style={{ minWidth: 0, overflow: 'hidden' }}
               >
                 {/* Section Header */}
