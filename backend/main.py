@@ -84,6 +84,31 @@ def _is_tech_job(job: dict) -> bool:
     
     return any(token in haystack for token in tech_tokens)
 
+
+def _country_matches_job(job: dict, country: str) -> bool:
+    """Check whether a job location matches selected country."""
+    selected = (country or "").strip().lower()
+    if not selected or selected == "remote":
+        return True
+
+    location_text = (job.get("location") or "").lower()
+    title_text = (job.get("title") or "").lower()
+    description_text = (job.get("description") or "").lower()
+    haystack = f"{location_text} {title_text} {description_text}"
+
+    aliases = {
+        "usa": ["usa", "united states", "u.s.", "us"],
+        "uk": ["uk", "united kingdom", "england", "london", "britain", "great britain"],
+        "germany": ["germany", "deutschland", "berlin", "munich", "hamburg", "frankfurt"],
+        "france": ["france", "paris", "lyon", "marseille", "toulouse"],
+        "tunisia": ["tunisia", "tunisie", "tunis", "sfax", "sousse"],
+        "canada": ["canada", "toronto", "montreal", "vancouver", "ottawa"],
+        "india": ["india", "bangalore", "bengaluru", "mumbai", "delhi", "hyderabad", "pune"],
+    }
+
+    tokens = aliases.get(selected, [selected])
+    return any(token in haystack for token in tokens)
+
 async def _scrape_jobs(keyword: str, location: str, country: str = "usa", scraper_source: str = "platforms") -> list:
     """Scrape jobs from multiple sources."""
     scraped_jobs = []
@@ -115,6 +140,9 @@ async def _scrape_jobs(keyword: str, location: str, country: str = "usa", scrape
 
     # Filter to tech jobs only
     scraped_jobs = [job for job in scraped_jobs if _is_tech_job(job)]
+
+    # Keep only jobs matching the selected country (except remote searches).
+    scraped_jobs = [job for job in scraped_jobs if _country_matches_job(job, country)]
 
     return scraped_jobs
 @app.get("/")
