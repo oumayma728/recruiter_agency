@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { FileText, X, CheckCircle, MapPin, Briefcase, Sparkles, ArrowRight, Shield, Zap, Award } from 'lucide-react';
 
 function FileUpload({
-  onFileSelect,
-  onAnalyze,
+  onFileSelect, // Callback when file is selected
+  onAnalyze, //Callback when analyze button is clicked
   loading,
   selectedCountry,
   onCountryChange,
@@ -27,8 +27,8 @@ function FileUpload({
   ];
 
   const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    const file = e.target.files[0]; //get the first file from the input
+    if (file && file.type === 'application/pdf') { //checks if the file is a PDF
       // Simulate upload progress
       for (let i = 0; i <= 100; i += 20) {
         setTimeout(() => setUploadProgress(i), i * 10);
@@ -118,28 +118,18 @@ function FileUpload({
                   <p className="text-black/70 text-sm mt-1">Intelligent job matching powered by AI</p>
                 </div>
               </div>
-              
-              {/* Feature Badges */}
-              <div className="flex gap-2">
-                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                  <Zap size={14} className="text-yellow-400" />
-                  <span className="text-black/90 text-xs font-medium">Instant Match</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                  <Award size={14} className="text-purple-400" />
-                  <span className="text-black/90 text-xs font-medium">98% Accuracy</span>
-                </div>
-              </div>
+            
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             
             {/* Country Selector - Premium Design */}
-            <div className="mb-8">
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                <MapPin size={12} className="inline mr-1.5 mb-0.5" />
+                <MapPin size={12} className="inline mr-2 mb-0.5" />
                 Job Location
               </label>
               <div className="relative group">
@@ -147,9 +137,9 @@ function FileUpload({
                   value={selectedCountry || 'usa'}
                   onChange={(e) => onCountryChange(e.target.value)}
                   className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 text-sm 
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
-                           appearance-none cursor-pointer hover:bg-gray-100 transition-all duration-200
-                           group-hover:border-gray-200 font-medium"
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                          appearance-none cursor-pointer hover:bg-gray-100 transition-all duration-200
+                          group-hover:border-gray-200 font-medium"
                 >
                   {Object.entries(groupedCountries).map(([region, regionCountries]) => (
                     <optgroup key={region} label={`— ${region} —`} className="font-bold text-gray-600">
@@ -164,24 +154,25 @@ function FileUpload({
 
               </div>
 
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 mt-4">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 ">
                 Job Source
               </label>
               <div className="relative group">
                 <select
                   value={selectedScraperSource || 'platforms'}
                   onChange={(e) => onScraperSourceChange(e.target.value)}
-                  className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                           appearance-none cursor-pointer hover:bg-gray-100 transition-all duration-200
-                           group-hover:border-gray-200 font-medium"
+                  className="w-full px-5 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-gray-700 text-sm 
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                          appearance-none cursor-pointer hover:bg-gray-100 transition-all duration-200
+                          group-hover:border-gray-200 font-medium"
                 >
-                  <option value="platforms">Other platforms (JobSpy)</option>
-                  <option value="keejob">Keejob only</option>
+                  <option value="platforms">Other platforms (Linkedin , Google jobs , indeed)</option>
+                  <option value="keejob">Keejob (Tunisia) </option>
                 </select>
               </div>
             </div>
-
+            </div>
+</div>
             {/* File Upload Area */}
             {!selectedFile ? (
               <div
@@ -220,34 +211,12 @@ function FileUpload({
                     `}>
                       <FileText className="text-slate-700" size={28} />
                     </div>
-                    
-                    <div>
-                      <p className="text-xl font-bold text-gray-800 mb-1">
-                        {isDragging ? 'Drop your PDF here' : 'Upload your resume'}
-                      </p>
-                      <p className="text-gray-500 text-sm">
-                        {isDragging ? 'Release to upload' : 'Drag & drop or click to browse'}
-                      </p>
-                      <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <CheckCircle size={12} /> PDF only
-                        </span>
-                        <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                        <span className="flex items-center gap-1">
-                          <Shield size={12} /> Secure upload
-                        </span>
-                        <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                        <span className="flex items-center gap-1">
-                          <Zap size={12} /> Instant analysis
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 </label>
               </div>
             ) : (
               /* Selected File Preview - Premium */
-              <div className="space-y-5 animate-in slide-in-from-bottom duration-300">
+              <div className="space-y-6 p-4 animate-in slide-in-from-bottom duration-300">
                 {/* File Info Card */}
                 <div className="relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 p-5">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-green-200 rounded-full filter blur-3xl opacity-20" />
@@ -287,23 +256,6 @@ function FileUpload({
                   </div>
                 </div>
 
-                {/* Trust Badges */}
-                <div className="flex items-center justify-center gap-6 pt-2">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Shield size={14} />
-                    <span>SSL Encrypted</span>
-                  </div>
-                  <div className="w-px h-4 bg-gray-200" />
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Award size={14} />
-                    <span>AI-Powered</span>
-                  </div>
-                  <div className="w-px h-4 bg-gray-200" />
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Zap size={14} />
-                    <span>Real-time matching</span>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -359,7 +311,6 @@ function FileUpload({
         
         </div>
       </div>
-    </div>
   );
 }
 
