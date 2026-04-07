@@ -22,9 +22,10 @@ export const getJob = async (id) => {
 };
 
 // Analyze resume
-export const analyzeResume = async (file) => {
+export const analyzeResume = async (file, country = 'usa') => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("country", country);
 
   const response = await api.post("/api/analyze_resume", formData, {
     headers: {
