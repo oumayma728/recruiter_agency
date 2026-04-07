@@ -33,10 +33,6 @@ if (matches.length === 0) {
             Found <span className="font-semibold">{matches.length}</span> matching positions
           </p>
         </div>
-
-        <div className="text-sm text-gray-400">
-          AI Powered Matching
-        </div>
       </div>
 
       {/* Job Cards */}
@@ -51,7 +47,7 @@ if (matches.length === 0) {
             <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition pointer-events-none bg-gradient-to-r from-indigo-500/10 to-purple-500/10" />
 
             {/* Top */}
-            <div className="flex items-start justify-between mb-4 relative">
+            <div className="p-4 flex items-start justify-between mb-4 relative">
               <div className="flex gap-4 items-start">
                 
                 {/* Rank */}
@@ -65,10 +61,11 @@ if (matches.length === 0) {
                     {job.title}
                   </h3>
 
-                  {/*<p className="text-gray-500 text-sm">
-                    {job.company}
-                  </p>*/}
-              
+                  {job.company && (
+                    <p className="text-gray-800 text-sm">
+                      {job.company}
+                    </p>
+                  )}
                 </div>
               </div>
 
