@@ -65,9 +65,10 @@ if (matches.length === 0) {
                     {job.title}
                   </h3>
 
-                  <p className="text-gray-500 text-sm">
+                  {/*<p className="text-gray-500 text-sm">
                     {job.company}
-                  </p>
+                  </p>*/}
+              
                 </div>
               </div>
 

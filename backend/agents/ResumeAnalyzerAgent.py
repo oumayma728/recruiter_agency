@@ -18,26 +18,22 @@ class ResumeAnalyzerAgent(BaseAgent):
 Extract AND analyze resumes in one pass. Return ONLY valid JSON."""),
         )
     
-    # ========== DATE UTILITIES (from ExtractorAgent) ==========
     def _calculate_years_of_experience(self, experience_list: list) -> float:
         """Calculate total years from experience entries (deterministic)"""
         total_months = 0
-        internship_keywords = ["stage", "stagiaire", "intern", "internship", "trainee", "apprenti"]
         
         for exp in experience_list:
             start = exp.get("start_date", "")
             end = exp.get("end_date", "")
-
-            title = (exp.get("title", "") or "").lower()
+            entry_text = self._build_experience_text(exp)
 
             try:
-                start_parsed = self._parse_month_year(start) if start else None
+                start_parsed = self._parse_month_year(start) if start else None 
                 end_parsed = self._parse_month_year(end) if end else None
 
                 if start_parsed and not end_parsed:
-                    # Treat "depuis/since/from" as ongoing when end date is missing.
-                    start_text = str(start).lower()
-                    if re.search(r"\b(depuis|since|from)\b", start_text):
+                    # Treat ongoing positions as active when end date is missing.
+                    if self._is_ongoing_experience(exp, start, end):
                         now = datetime.now()
                         end_parsed = (now.year, now.month)
 
@@ -53,7 +49,7 @@ Extract AND analyze resumes in one pass. Return ONLY valid JSON."""),
                     if months_diff <= 0:
                         continue
 
-                if any(keyword in title for keyword in internship_keywords):
+                if self._is_internship_experience(entry_text):
                     months_diff = min(months_diff, 6)
                 
                 total_months += max(0, months_diff)
@@ -64,22 +60,101 @@ Extract AND analyze resumes in one pass. Return ONLY valid JSON."""),
         
         return round(total_months / 12, 1)
 
+    def _build_experience_text(self, exp: dict) -> str:
+        if not isinstance(exp, dict):
+            return ""
+
+        text_chunks = [
+            str(exp.get("title", "") or ""),
+            str(exp.get("company", "") or ""),
+            str(exp.get("start_date", "") or ""),
+            str(exp.get("end_date", "") or ""),
+            " ".join(exp.get("responsibilities", []) or []),
+            str(exp.get("description", "") or ""),
+        ]
+        return " ".join(text_chunks).lower()
+
+    def _is_internship_experience(self, text: str) -> bool:
+        internship_keywords = ["stage", "stagiaire", "intern", "internship", "trainee", "apprenti"]
+        lowered = (text or "").lower()
+        return any(keyword in lowered for keyword in internship_keywords)
+
+    def _is_ongoing_experience(self, exp: dict, start: str = "", end: str = "") -> bool:
+        lowered_end = (end or "").strip().lower()
+        if lowered_end in {"present", "présent", "now", "current", "ongoing", "today", "actuel", "en cours"}:
+            return True
+
+        text = self._build_experience_text(exp)
+        ongoing_tokens = ["depuis", "since", "from", "present", "présent", "actuel", "en cours", "currently"]
+        if any(token in text for token in ongoing_tokens):
+            return True
+
+        # CDI without an explicit end date usually means ongoing.
+        if "cdi" in text and not (end or "").strip():
+            return True
+
+        # Start-only date with no end often indicates current role.
+        if (start or "").strip() and not (end or "").strip():
+            return True
+
+        return False
+
+    def _infer_start_date_from_text(self, exp: dict) -> str:
+        text = self._build_experience_text(exp)
+
+        match_from_year = re.search(r"\b(?:depuis|since|from)\s+(19|20)\d{2}\b", text)
+        if match_from_year:
+            year = re.search(r"(19|20)\d{2}", match_from_year.group(0)).group(0)
+            return f"01/{year}"
+
+        match_mm_yyyy = re.search(r"\b(\d{1,2})\s*/\s*(\d{4})\b", text)
+        if match_mm_yyyy:
+            month = int(match_mm_yyyy.group(1))
+            year = match_mm_yyyy.group(2)
+            if 1 <= month <= 12:
+                return f"{month:02d}/{year}"
+
+        match_year = re.search(r"\b(19|20)\d{2}\b", text)
+        if match_year:
+            return f"01/{match_year.group(0)}"
+
+        return ""
+
+    def _add_months(self, start_year: int, start_month: int, months: int):
+        month_index = (start_year * 12 + (start_month - 1)) + max(1, months)
+        end_year = month_index // 12
+        end_month = (month_index % 12) + 1
+        return end_year, end_month
+
     def _extract_duration_months(self, exp: dict) -> int:
         """Fallback duration parser for entries like 'stage 6 mois' when dates are missing."""
         if not isinstance(exp, dict):
             return 0
 
-        text_chunks = [
-            str(exp.get("title", "") or ""),
-            str(exp.get("company", "") or ""),
-            " ".join(exp.get("responsibilities", []) or []),
-            str(exp.get("description", "") or ""),
-        ]
-        text = " ".join(text_chunks).lower()
+        text = self._build_experience_text(exp)
 
-        month_match = re.search(r"(\d{1,2})\s*(mois|month|months)\b", text)
+        month_match = re.search(r"(\d{1,2})\s*[- ]?\s*(mois|month|months)\b", text)
         if month_match:
             return int(month_match.group(1))
+
+        # Handle basic French number words for internship durations.
+        french_month_words = {
+            "un": 1,
+            "deux": 2,
+            "trois": 3,
+            "quatre": 4,
+            "cinq": 5,
+            "six": 6,
+            "sept": 7,
+            "huit": 8,
+            "neuf": 9,
+            "dix": 10,
+            "onze": 11,
+            "douze": 12,
+        }
+        for word, value in french_month_words.items():
+            if re.search(rf"\b{word}\s+mois\b", text):
+                return value
 
         year_match = re.search(r"(\d+(?:[\.,]\d+)?)\s*(an|ans|année|années|year|years)\b", text)
         if year_match:
@@ -246,12 +321,23 @@ Extract AND analyze resumes in one pass. Return ONLY valid JSON."""),
             
             start = (exp.get("start_date") or "").strip()
             end = (exp.get("end_date") or "").strip()
+            entry_text = self._build_experience_text(exp)
 
             # Normalize already extracted dates
             if start:
                 exp["start_date"] = self._normalize_date_value(start)
             if end:
                 exp["end_date"] = self._normalize_date_value(end)
+
+            start = (exp.get("start_date") or "").strip()
+            end = (exp.get("end_date") or "").strip()
+
+            # Infer start date from patterns like "CDI depuis 2020".
+            if not start:
+                inferred_start = self._infer_start_date_from_text(exp)
+                if inferred_start:
+                    exp["start_date"] = inferred_start
+                    start = inferred_start
 
             # Common CV form: "depuis 2020" with missing end date
             if (not end) and re.search(r"\b(depuis|since|from)\b", start, flags=re.IGNORECASE):
@@ -271,6 +357,23 @@ Extract AND analyze resumes in one pass. Return ONLY valid JSON."""),
                     exp["start_date"] = inferred["start_date"]
                 if not end:
                     exp["end_date"] = inferred["end_date"]
+
+            # Ongoing rules for CDI / depuis / role without end date.
+            start = (exp.get("start_date") or "").strip()
+            end = (exp.get("end_date") or "").strip()
+            if not end and self._is_ongoing_experience(exp, start, end):
+                exp["end_date"] = "Present"
+                end = "Present"
+
+            # Internship-specific rule: if we know duration and start, infer end date.
+            if self._is_internship_experience(entry_text):
+                duration_months = self._extract_duration_months(exp)
+                start_parsed = self._parse_month_year(exp.get("start_date", ""))
+                end_parsed = self._parse_month_year(exp.get("end_date", ""))
+                if duration_months > 0 and start_parsed and not end_parsed:
+                    start_year, start_month = start_parsed
+                    end_year, end_month = self._add_months(start_year, start_month, duration_months)
+                    exp["end_date"] = f"{end_month:02d}/{end_year}"
             
             filled.append(exp)
         

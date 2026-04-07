@@ -22,10 +22,11 @@ export const getJob = async (id) => {
 };
 
 // Analyze resume
-export const analyzeResume = async (file, country = 'usa') => {
+export const analyzeResume = async (file, country = 'usa', scraperSource = 'platforms') => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("country", country);
+  formData.append("scraper_source", scraperSource);
 
   const response = await api.post("/api/analyze_resume", formData, {
     headers: {

@@ -2,6 +2,7 @@ import { Briefcase, Award, TrendingUp, Wrench, Database } from 'lucide-react';
 
 function SkillsAnalysis({ data }) {
   const skillsAnalysis = data?.analysis_results?.skills_analysis || {};
+  const jobTitle = data?.candidate?.job_title || skillsAnalysis?.job_title || "N/A";
 
   const sections = [
     {
@@ -70,7 +71,15 @@ function SkillsAnalysis({ data }) {
             />
           </div>
         </div>
-
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Job title</span>
+            <Award size={16} className="text-yellow-400" />
+          </div>
+          <span className="text-3xl font-bold text-gray-800">
+            {jobTitle}
+          </span>
+        </div>
         <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-white p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Level</span>

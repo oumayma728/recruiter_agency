@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager 
 from bs4 import BeautifulSoup 
 import time 
+import re
 import random 
 from typing import List, Dict 
 import urllib.parse 
@@ -172,10 +173,17 @@ class KeeJobScraper:
          
         # Map keywords to categories 
         category_map = { 
+            'développeur': 'informatique',
+            'developpeur': 'informatique',
             'developer': 'informatique', 
             'dev': 'informatique', 
             'software': 'informatique', 
             'it': 'informatique', 
+            'full stack': 'informatique',
+            'frontend': 'informatique',
+            'backend': 'informatique',
+            'react': 'informatique',
+            'node': 'informatique',
             'data': 'informatique', 
             'marketing': 'commerce', 
             'commercial': 'commerce', 
@@ -212,13 +220,12 @@ class KeeJobScraper:
         
         for card in job_cards:
             try:
-            # Extract title
+                # Extract title
                 title_elem = card.find("h2") or card.find("h3") or card.find("h4")
                 title = title_elem.text.strip() if title_elem else "Unknown Position"
                 
                 # Extract company
-                company_elem = card.find(class_=lambda x: x and ('company' in x or 'entreprise' in x))
-                company = company_elem.text.strip() if company_elem else "Company Not Listed"
+                company = self._extract_company_name(card)
                 
                 # Extract location
                 location_elem = card.find(class_=lambda x: x and ('location' in x or 'lieu' in x))
@@ -259,6 +266,25 @@ class KeeJobScraper:
                 continue
     
         return jobs
+
+    def _extract_company_name(self, card) -> str:
+        """Extract the company name from known Keejob markup patterns."""
+        # Keejob often wraps the company name in a link to /companies/<id>/.
+        company_link = card.select_one('a[href*="/companies/"]')
+        if company_link and company_link.get_text(strip=True):
+            return company_link.get_text(strip=True)
+
+        # Fallback to explicit company-related classes if present.
+        company_elem = card.find(class_=lambda x: x and any(token in x for token in ['company', 'entreprise', 'employer']))
+        if company_elem and company_elem.get_text(strip=True):
+            return company_elem.get_text(strip=True)
+
+        # Final fallback: sometimes the company name is the last meaningful link text on the card.
+        links = [a.get_text(strip=True) for a in card.find_all('a') if a.get_text(strip=True)]
+        if len(links) >= 2:
+            return links[1]
+
+        return "Company Not Listed"
     def _extract_text(self, element, selectors, default=""): 
         """Helper to extract text using multiple selectors""" 
         for selector in selectors: 
@@ -307,9 +333,11 @@ class KeeJobScraper:
             return jobs
          
         relevant_jobs = [] 
+        min_score = 2 if len(keyword_parts) >= 2 else 1
         for job in jobs: 
             title = job.get('title', '').lower() 
             description = job.get('description', '').lower() 
+            requirements = " ".join(job.get('requirements', [])).lower()
              
             # Calculate relevance score 
             score = 0 
@@ -318,11 +346,13 @@ class KeeJobScraper:
                     score += 3  # Title match is worth more 
                 elif part in description: 
                     score += 1  # Description match is worth less 
+                elif part in requirements:
+                    score += 2
             
             # Special case for 'it' - usually it appears as 'IT' or in words. 
             # We already have title/description match which is fine.
             
-            if score > 0: 
+            if score >= min_score: 
                 job['relevance_score'] = score 
                 relevant_jobs.append(job) 
          
@@ -350,10 +380,9 @@ class KeeJobScraper:
         ] 
          
         found_skills = [] 
-        text_lower = text.lower() 
-         
         for skill in tech_keywords: 
-            if skill.lower() in text_lower: 
+            pattern = r"(?<!\w)" + re.escape(skill) + r"(?!\w)" 
+            if re.search(pattern, text, flags=re.IGNORECASE): 
                 found_skills.append(skill) 
          
         return found_skills 
@@ -363,3 +392,4 @@ class KeeJobScraper:
             self.driver.quit() 
             self.driver = None 
             print("🌐 Browser closed.")
+            

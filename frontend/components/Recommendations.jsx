@@ -6,16 +6,15 @@ function Recommendations({ data }) {
     const enhancementResults = data?.enhancement_results || {};
     const matchResults = data?.match_results || {};
     
-    // Map recommendation data to match what the UI expects
+    // Use data directly from backend (already processed by orchestrator)
     const mappedRecommendation = {
-        // If your recommender doesn't have these, create defaults based on match results
-        hiring_recommendation: getHiringRecommendation(matchResults),
-        overall_assessment: generateOverallAssessment(matchResults, enhancementResults),
-        confidence_level: calculateConfidence(matchResults),
-        strengths: extractStrengths(data?.analysis_results),
-        concerns: extractConcerns(matchResults),
-        next_steps: generateNextSteps(matchResults),
-        interview_questions: generateInterviewQuestions(matchResults)
+        hiring_recommendation: recommendationResults?.hiring_recommendation || 'PASS',
+        overall_assessment: recommendationResults?.overall_assessment || 'No assessment available',
+        confidence_level: recommendationResults?.confidence_level || 'LOW',
+        strengths: recommendationResults?.strengths || [],
+        concerns: recommendationResults?.concerns || [],
+        next_steps: recommendationResults?.next_steps || [],
+        interview_questions: recommendationResults?.interview_questions || []
     };
     
     // Get profile enhancement recommendations

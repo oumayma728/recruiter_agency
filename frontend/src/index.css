@@ -1,22 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-ink: #0f172a;
+  --brand-ocean: #0f766e;
+  --brand-sky: #0284c7;
+  --brand-amber: #f59e0b;
+  --page-bg-a: #f0fdfa;
+  --page-bg-b: #eef2ff;
+}
+
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
   body {
-    @apply min-h-screen;
+    @apply min-h-screen antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--brand-ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #bae6fd 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #99f6e4 0%, transparent 55%),
+      linear-gradient(180deg, var(--page-bg-a) 0%, #ffffff 45%, var(--page-bg-b) 100%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Sora', sans-serif;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white px-8 py-3 rounded-lg font-semibold 
-    hover:bg-primary/90 transition-all duration-200 
+    @apply text-white px-8 py-3 rounded-xl font-semibold 
+    transition-all duration-200 
     disabled:opacity-60 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, var(--brand-ocean), var(--brand-sky));
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.03);
   }
 
   .card {
-    @apply bg-white rounded-2xl shadow-2xl p-8;
+    @apply bg-white/85 backdrop-blur rounded-2xl shadow-xl p-8 border border-white/70;
   }
 
   .tag {
