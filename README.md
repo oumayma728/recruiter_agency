@@ -76,10 +76,7 @@ The system now includes a **Keejob Scraper**:
      source venv/bin/activate
      ```
 
-   - Install dependencies:
-     ```bash
-     pip install -r requirements.txt
-     ```
+   
 
 3. **Run the backend API**
    ```bash
@@ -89,5 +86,5 @@ The system now includes a **Keejob Scraper**:
    ```bash
    cd ../frontend
    npm install
-   npm start
+   npm run dev
     ```
